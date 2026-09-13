@@ -1,0 +1,1386 @@
+INSTAGRAM AI MULTI-ACCOUNT GROWTH & CONTENT COMMAND CENTER
+Ты — Senior Full-Stack Engineer, AI Engineer, Data Engineer, DevOps Engineer и Product Architect.
+Нужно создать production-ready платформу для управления множеством Instagram-аккаунтов, контентом, публикациями, аналитикой и AI-оптимизацией.
+Это НЕ обычная CRUD-админка.
+Это должна быть полноценная автономная система:
+AI CONTENT → PUBLICATION → ANALYTICS → LEARNING → OPTIMIZATION → NEXT CONTENT
+Главная бизнес-цель системы:
+МАКСИМАЛЬНО УВЕЛИЧИВАТЬ ОРГАНИЧЕСКИЕ ПРОСМОТРЫ ВИДЕО И КОЛИЧЕСТВО ПЕРЕХОДОВ В ПРОФИЛЬ / ПО ССЫЛКЕ ПРОФИЛЯ.
+Лайки, комментарии, saves, shares и подписчики являются дополнительными метриками.
+Система должна постоянно анализировать, какой контент приносит лучший результат, и использовать полученные данные для подготовки следующих публикаций.
+1. ГЛАВНАЯ AI-ЦЕЛЬ
+AI не должен оптимизировать контент только под:
+likes;
+comments;
+followers.
+Главный приоритет:
+VIDEO VIEWS
+REACH
+PROFILE VISITS
+LINK CLICKS, если метрика доступна через официальный API/источник аналитики
+WATCH TIME / RETENTION, если доступно
+SHARES
+SAVES
+COMMENTS
+LIKES
+FOLLOWER GROWTH
+Но система должна использовать взвешенную модель, а не просто смотреть на одну цифру.
+Создать:
+AI PERFORMANCE SCORE
+Например:
+Views
+Reach
+Profile Visits
+Link Clicks
+Shares
+Saves
+Retention
+Engagement
+и рассчитывать итоговый score.
+2. AI ДОЛЖЕН УЧИТЬСЯ НА КАЖДОМ АККАУНТЕ ОТДЕЛЬНО
+Критически важно:
+НЕ создавать одну общую модель поведения для всех аккаунтов.
+Каждый аккаунт должен иметь собственную AI-память.
+Например:
+@account1
+AI знает:
+лучшие часы;
+лучшие дни;
+лучшие темы;
+лучшие hooks;
+лучшие длины;
+лучшие captions;
+лучшие hashtags;
+лучшие CTA;
+лучшие форматы;
+лучшие thumbnails;
+какие видео провалились;
+какие видео стали viral;
+какие характеристики чаще приводят к profile visits.
+Другой аккаунт:
+@account2
+имеет полностью отдельную статистическую модель.
+3. AI ACCOUNT PROFILE
+Для каждого аккаунта создать:
+AI PROFILE
+Пример:
+ACCOUNT:
+@account1
+
+BEST HOURS:
+18:00–21:00
+
+BEST DAYS:
+Tuesday
+Thursday
+Saturday
+
+BEST VIDEO LENGTH:
+14–23 sec
+
+BEST TOPICS:
+Topic A
+Topic B
+Topic C
+
+BEST HOOK STYLE:
+Question
+Unexpected fact
+Problem → Solution
+
+BEST CTA:
+"Подробнее в профиле"
+
+BEST HASHTAG CLUSTER:
+Cluster #4
+
+PROFILE VISIT RATE:
+7.8%
+
+LINK CLICK RATE:
+2.1%
+
+AI CONFIDENCE:
+82%
+Этот профиль автоматически обновляется после появления новых данных.
+4. CONTENT INTELLIGENCE
+При загрузке каждого видео создать AI-анализ.
+AI должен определить:
+тему;
+категорию;
+визуальный стиль;
+длительность;
+первые 1–3 секунды;
+hook;
+наличие текста;
+наличие лица;
+наличие речи;
+язык;
+эмоциональный тон;
+структуру;
+CTA;
+потенциальную аудиторию;
+визуальные паттерны;
+темп;
+приблизительную плотность информации.
+Если видео технически доступно AI для анализа, использовать multimodal AI.
+5. HOOK ANALYSIS
+Особенно важно анализировать первые секунды.
+Создать:
+HOOK SCORE
+Например:
+Hook strength: 87/100
+
+Почему:
++ вопрос в первые 2 sec
++ визуальное изменение
++ обещание результата
++ высокая информационная плотность
+AI должен искать закономерности:
+какие hooks дают больше просмотров;
+какие hooks дают больше удержания;
+какие hooks дают больше переходов в профиль.
+6. VIRAL ANALYSIS
+После публикации система должна отслеживать динамику.
+Например:
+0–1 hour
+1,200 views
+
+1–3 hours
+5,400 views
+
+3–6 hours
+18,000 views
+
+6–12 hours
+46,000 views
+
+12–24 hours
+71,000 views
+AI должен определить:
+acceleration;
+growth rate;
+view velocity;
+performance relative to account average.
+7. OUTLIER DETECTION
+Если обычные ролики получают:
+2K–5K views
+а один получил:
+80K views
+система должна автоматически определить его как:
+VIRAL OUTLIER
+И запустить глубокий анализ.
+8. ПОЧЕМУ РОЛИК ЗАЛЕТЕЛ
+AI должен попытаться определить факторы успеха:
+topic;
+hook;
+duration;
+editing style;
+posting time;
+caption;
+hashtags;
+CTA;
+thumbnail;
+visual style;
+audience;
+engagement velocity.
+Показывать:
+WHY THIS VIDEO PERFORMED WELL
+
+Hook        +++
+Topic       +++
+Timing      ++
+Length      ++
+Caption     +
+Hashtags    +
+CTA         +++
+Но AI должен разделять:
+CORRELATION
+и
+CAUSATION.
+Не писать:
+"Причина 100% — hashtag X"
+если данных недостаточно.
+9. FAILURE ANALYSIS
+Если видео набрало мало просмотров:
+например:
+Average = 12,000
+Video = 1,800
+AI должен создать:
+WHY IT UNDERPERFORMED
+Например:
+Possible reasons:
+
+1. Weak first 2 seconds
+2. Topic below account average
+3. Posted outside best time
+4. Low retention
+5. Weak CTA
+6. Caption generated low interaction
+И предложить изменения.
+10. NEXT VIDEO STRATEGY
+После анализа предыдущих видео AI должен создать:
+NEXT CONTENT STRATEGY
+Например:
+Use:
+
+Hook pattern from Video #31
+Topic cluster from Video #18
+Length: 17–21 sec
+Posting time: 19:00
+CTA: Profile-oriented
+Caption style: short
+Hashtag cluster: #4
+Это НЕ означает копировать ролик.
+Нужно использовать успешные признаки для создания новых вариантов.
+11. AI CAPTION GENERATOR
+AI должен автоматически генерировать caption.
+Но caption должен быть связан с целью:
+PROFILE VISIT / LINK CONVERSION
+Не просто:
+"Like and follow!"
+А создавать естественный CTA, соответствующий контенту.
+Например:
+Полный вариант уже в профиле.
+
+Смотри ссылку в описании профиля.
+AI должен тестировать разные CTA.
+12. AI HASHTAG ENGINE
+Создать отдельный AI-модуль.
+Он анализирует:
+историческую эффективность hashtags;
+topic;
+account;
+audience;
+language;
+competition;
+relevance.
+Создавать hashtag clusters.
+Например:
+Cluster A
+Cluster B
+Cluster C
+И сравнивать их результаты.
+Не использовать нерелевантные hashtags ради количества.
+13. CTA OPTIMIZATION
+Создать:
+CTA EXPERIMENT ENGINE
+Варианты:
+profile visit;
+link visit;
+follow;
+save;
+comment;
+share.
+Главный приоритет:
+PROFILE → LINK.
+Если доступна метрика кликов по ссылке, оптимизировать именно её.
+14. A/B TESTING
+Добавить эксперименты.
+Например:
+Video A:
+CTA A
+Caption A
+Hashtag Cluster A
+Video B:
+CTA B
+Caption B
+Hashtag Cluster B
+Система сравнивает результат.
+Не менять одновременно всё без необходимости.
+Использовать controlled experiments.
+15. AI PREDICTION
+Перед публикацией AI должен дать:
+PREDICTED PERFORMANCE
+Например:
+Expected views:
+8K–20K
+
+Expected profile visits:
+400–1,100
+
+Expected link clicks:
+80–240
+
+Confidence:
+71%
+ВАЖНО:
+Это прогноз, а не гарантия.
+Не создавать fake statistics.
+16. AI CONFIDENCE
+Каждая рекомендация должна иметь confidence.
+Например:
+Best posting time:
+19:00
+
+Confidence:
+84%
+Если данных мало:
+Insufficient historical data
+Confidence: 31%
+17. COLD START
+Для нового аккаунта нет статистики.
+AI должен использовать:
+общие content patterns;
+выбранную нишу;
+исторические данные после накопления;
+controlled experiments.
+Но после появления собственной статистики:
+ACCOUNT DATA MUST OVERRIDE GENERIC ASSUMPTIONS.
+18. AI MEMORY
+Для каждого аккаунта хранить:
+Successful patterns
+Failed patterns
+Experiments
+Recommendations
+Performance history
+Например:
+DO MORE:
+
+Question hooks
+15–20 sec
+18:00–20:00
+Short captions
+
+DO LESS:
+
+Long intros
+Generic captions
+Weak CTA
+19. AUTONOMOUS OPTIMIZATION LOOP
+Основной цикл:
+UPLOAD VIDEO
+↓
+AI ANALYSIS
+↓
+AI GENERATES CAPTION
+↓
+AI GENERATES HASHTAGS
+↓
+AI SELECTS CTA
+↓
+AI RECOMMENDS POSTING TIME
+↓
+ADMIN APPROVAL / AUTO MODE
+↓
+SCHEDULE
+↓
+PUBLISH
+↓
+COLLECT ANALYTICS
+↓
+ANALYZE PERFORMANCE
+↓
+UPDATE ACCOUNT AI PROFILE
+↓
+UPDATE CONTENT STRATEGY
+↓
+NEXT VIDEO
+20. AUTO MODE
+Добавить два режима.
+MANUAL AI
+AI только предлагает.
+Администратор подтверждает.
+AUTOPILOT
+AI автоматически:
+анализирует;
+выбирает caption;
+выбирает hashtags;
+выбирает CTA;
+выбирает время;
+создаёт schedule.
+Но публикация должна происходить только через разрешённые официальные механизмы платформы.
+21. HUMAN APPROVAL
+Для безопасности добавить:
+"Require approval"
+Если включено:
+AI подготовил публикацию.
+Администратор видит:
+Video
+Caption
+Hashtags
+CTA
+Scheduled time
+AI prediction
+Кнопки:
+APPROVE
+EDIT
+REJECT
+22. CONTENT SCORE
+Каждое видео получает:
+CONTENT SCORE
+Например:
+Hook: 91
+Topic: 84
+Retention potential: 87
+CTA: 78
+Profile conversion potential: 89
+
+TOTAL: 87/100
+23. PROFILE CONVERSION
+Отдельная метрика:
+PROFILE VISIT RATE
+Формула:
+profile visits / reach
+И:
+LINK CLICK RATE
+если данные доступны.
+Также:
+link clicks / profile visits
+Показывать funnel:
+Views
+ ↓
+Reach
+ ↓
+Profile Visits
+ ↓
+Link Clicks
+Это главный бизнес-funnel.
+24. AI FUNNEL ANALYSIS
+AI должен отвечать:
+"Где мы теряем пользователей?"
+Например:
+Views:       100,000
+Reach:        82,000
+Profile:       6,500
+Link clicks:   1,200
+AI:
+Video discovery is strong.
+
+Profile conversion is average.
+
+Link conversion is weak.
+
+Recommendation:
+Improve CTA and profile promise.
+25. PROFILE OPTIMIZATION
+Добавить отдельный AI-модуль:
+PROFILE CONVERSION OPTIMIZER
+Анализировать:
+bio;
+CTA;
+profile positioning;
+link;
+consistency between video and profile.
+AI должен рекомендовать:
+bio variants;
+CTA variants;
+profile description;
+link placement strategy.
+26. ACCOUNT-SPECIFIC STRATEGY
+Каждый аккаунт имеет:
+Content Strategy
+Posting Strategy
+CTA Strategy
+Hashtag Strategy
+Growth Strategy
+Conversion Strategy
+И всё это отдельно.
+27. MULTI ACCOUNT
+Поддержать:
+10
+50
+100+
+аккаунтов
+без архитектурного переписывания.
+Каждый аккаунт изолирован:
+Account
+Network Profile
+Content Queue
+Schedule
+Analytics
+AI Profile
+28. NETWORK PROFILES
+Создать:
+NETWORK PROFILES
+Для каждого аккаунта:
+Account:
+@account1
+
+Network Profile:
+Region: ...
+Proxy: ...
+Status: HEALTHY
+Last check: ...
+Latency: ...
+Система должна поддерживать назначение отдельного network profile каждому аккаунту, если это необходимо для разрешённой инфраструктуры.
+НЕ использовать сеть для обхода блокировок, CAPTCHA, 2FA или иных ограничений Instagram.
+НЕ использовать украденные cookies/session tokens.
+НЕ использовать массовые бесплатные публичные прокси для обхода ограничений.
+Если proxy нестабилен:
+DISABLED
+Если latency слишком высокий:
+WARNING
+Если соединение не работает:
+OFFLINE
+29. FREE PROXY OPTION
+Можно добавить возможность подключить бесплатный proxy provider, если он легален и стабилен.
+Но:
+НЕ рассчитывать на бесплатные публичные proxy как на защиту от банов.
+Система должна предупреждать:
+"Free proxy may be unstable or insecure."
+Администратор должен иметь возможность заменить proxy.
+30. PROXY HEALTH CHECK
+Проверять:
+Latency
+Availability
+Connection errors
+Но НЕ использовать proxy для обхода platform restrictions.
+31. ACCOUNT ISOLATION
+Если один аккаунт имеет network/API error:
+другие аккаунты продолжают работу.
+Account 1 FAILED
+Account 2 ACTIVE
+Account 3 ACTIVE
+Account 4 ACTIVE
+32. PUBLICATION SCHEDULE
+Каждый аккаунт имеет отдельное расписание.
+Например:
+Account 1:
+every 4h
+Account 2:
+every 5h
+Account 3:
+every 6h
+Account 4:
+manual schedule
+33. 4 VIDEOS EXAMPLE
+Если загрузили:
+Video 1
+Video 2
+Video 3
+Video 4
+Account 1:
+10:00
+14:00
+18:00
+22:00
+Account 2:
+09:00
+14:00
+19:00
+00:00
+Account 3:
+08:00
+14:00
+20:00
+02:00
+Каждый аккаунт работает независимо.
+34. QUEUE
+У каждого аккаунта отдельная queue.
+Ошибки Account 1 не должны блокировать Account 2.
+35. CALENDAR
+DAY
+WEEK
+MONTH
+Показывать:
+Account
+Video
+Time
+Status
+36. CONTENT LIBRARY
+Поддержать:
+upload;
+bulk upload;
+preview;
+thumbnail;
+metadata;
+caption;
+hashtags;
+CTA;
+AI analysis;
+status;
+assigned accounts.
+37. VIDEO PROCESSING
+Использовать FFmpeg для подготовки совместимого media.
+Сохранять original.
+Создавать processed copy.
+Проверять:
+codec
+resolution
+duration
+format
+file size
+38. BULK UPLOAD
+Можно загрузить 100+ видео.
+Processing выполняется background worker.
+UI показывает progress.
+39. MASS ASSIGN
+Выбрать:
+ALL ACCOUNTS
+и создать publication tasks.
+Но scheduler должен соблюдать:
+account-specific rules.
+40. PUBLICATION TASK
+Каждая task:
+id
+account_id
+video_id
+scheduled_at
+status
+attempt_count
+created_at
+published_at
+error
+41. RETRY
+Temporary error:
+retry.
+Permanent error:
+failed.
+Auth error:
+notify admin.
+Rate limit:
+reschedule согласно официальным ограничениям API.
+42. DUPLICATE PROTECTION
+Не допускать случайного повторного запуска одной task.
+Использовать idempotency key.
+43. DATABASE
+PostgreSQL.
+Tables:
+users
+instagram_accounts
+account_settings
+network_profiles
+videos
+video_variants
+ai_video_analysis
+ai_account_profiles
+ai_recommendations
+ai_experiments
+schedules
+schedule_slots
+publication_tasks
+publications
+publication_attempts
+analytics
+account_analytics
+video_analytics
+profile_analytics
+link_analytics
+notifications
+system_logs
+audit_logs
+44. REDIS
+Использовать Redis для:
+queue
+locks
+cache
+rate control
+background jobs
+45. WORKERS
+Архитектура:
+Frontend
+↓
+API
+↓
+PostgreSQL
+↓
+Redis
+↓
+Scheduler
+↓
+Worker
+↓
+Official Instagram/Meta API
+↓
+Analytics
+↓
+AI Engine
+46. AI ENGINE
+Создать отдельный service/module:
+ai_engine
+Модули:
+content_analyzer
+hook_analyzer
+caption_generator
+hashtag_engine
+cta_optimizer
+performance_analyzer
+outlier_detector
+prediction_engine
+recommendation_engine
+account_strategy
+profile_optimizer
+47. AI COST CONTROL
+AI запросы должны кешироваться.
+Не анализировать одно видео несколько раз без причины.
+Хранить:
+analysis_hash
+Если видео не изменилось:
+reuse analysis.
+48. AI MODEL FALLBACK
+Создать abstraction:
+AIProvider
+Чтобы можно было менять модель.
+Например:
+Primary AI
+Fallback AI
+Не привязывать весь проект к одному provider.
+49. AI ANALYTICS DASHBOARD
+Раздел:
+AI INTELLIGENCE
+Показывать:
+Best performing videos
+Worst performing videos
+Best posting times
+Best hooks
+Best captions
+Best hashtags
+Best CTA
+Best topics
+Profile conversion
+Link conversion
+50. AI RECOMMENDATIONS
+Каждый день генерировать:
+TODAY'S AI RECOMMENDATIONS
+Например:
+1. Publish @account1 at 19:00
+
+2. Use short hook
+
+3. Use Topic Cluster B
+
+4. CTA should point to profile
+
+5. Avoid long intro
+
+6. Test 18–20 sec duration
+51. DAILY AI REPORT
+Каждый день:
+AI DAILY REPORT
+
+Publications: 34
+
+Total views: 420K
+
+Profile visits: 31K
+
+Link clicks: 6.2K
+
+Best account:
+@account7
+
+Best video:
+Video #81
+
+Best time:
+19:00
+
+Best hook:
+Question
+
+Biggest problem:
+Low profile conversion on @account3
+52. WEEKLY AI REPORT
+Показывать:
+Week-over-week.
+Views
+Reach
+Profile visits
+Link clicks
+Followers
+Engagement
+AI explanation:
+WHAT IMPROVED
+WHAT GOT WORSE
+WHY
+WHAT TO TEST NEXT
+53. AI EXPERIMENT CENTER
+Раздел:
+Experiments
+Создавать:
+Hook experiment
+Caption experiment
+Hashtag experiment
+CTA experiment
+Posting-time experiment
+Duration experiment
+54. EXPERIMENT RULES
+Не менять всё одновременно.
+Например:
+Experiment:
+CTA A vs CTA B
+Остальные параметры по возможности одинаковые.
+После достаточного количества данных:
+Winner
+Loser
+Inconclusive
+55. STATISTICAL SAFETY
+Если данных недостаточно:
+НЕ делать уверенный вывод.
+Например:
+Not enough data.
+
+Need approximately 20 additional comparable publications.
+56. NO FAKE ANALYTICS
+Никаких придуманных:
+views
+clicks
+reach
+followers.
+Если API не предоставляет показатель:
+N/A.
+57. ADMIN DASHBOARD
+Главные карточки:
+Accounts
+Active
+Paused
+Videos
+Queue
+Published Today
+Views
+Profile Visits
+Link Clicks
+Errors
+58. MAIN FUNNEL
+Большой график:
+VIEWS
+↓
+PROFILE VISITS
+↓
+LINK CLICKS
+59. ACCOUNT COMPARISON
+Таблица:
+Account
+Views
+Profile Visits
+Link Clicks
+Conversion
+Posts
+Status
+Можно сортировать по:
+Views
+Profile visits
+Link clicks
+Conversion
+60. VIDEO COMPARISON
+Показывать:
+Video
+Account
+Views
+Reach
+Profile visits
+Link clicks
+Engagement
+AI score
+61. ACCOUNT PAGE
+Tabs:
+Overview
+Content
+Schedule
+Queue
+Analytics
+AI Intelligence
+Experiments
+Network
+Logs
+Settings
+62. VIDEO PAGE
+Tabs:
+Preview
+Publication
+Analytics
+AI Analysis
+Recommendations
+History
+63. AI EXPLANATION
+AI должен объяснять рекомендации простым языком.
+Например:
+Почему рекомендуем 19:00?
+
+За последние 30 публикаций этого аккаунта
+ролики в 19:00 получили в среднем на 38%
+больше просмотров.
+Всегда показывать источник расчёта.
+64. ADMIN OVERRIDE
+AI никогда не должен лишать администратора контроля.
+Администратор может изменить:
+Caption
+Hashtags
+CTA
+Time
+Schedule
+Account
+Network profile
+65. GLOBAL PAUSE
+Кнопка:
+PAUSE ALL
+и:
+RESUME ALL
+66. ACCOUNT PAUSE
+Каждый аккаунт:
+ACTIVE
+PAUSED
+Очередь сохраняется.
+67. SECURITY
+Использовать:
+OAuth
+encrypted secrets
+secure cookies
+CSRF
+rate limiting
+RBAC
+audit log
+input validation
+Роли:
+OWNER
+ADMIN
+EDITOR
+VIEWER
+68. STORAGE
+Видео хранить в:
+S3-compatible storage.
+НЕ в PostgreSQL.
+PostgreSQL хранит metadata.
+69. BACKUP
+Daily PostgreSQL backup.
+Retention:
+7 daily
+4 weekly
+3 monthly
+70. HEALTH MONITORING
+Показывать:
+API
+Database
+Redis
+Worker
+Scheduler
+Storage
+AI provider
+Instagram/Meta API
+71. AUTO RECOVERY
+После:
+server reboot
+worker restart
+scheduler restart
+очередь не должна потеряться.
+72. 24/7
+КРИТИЧЕСКОЕ ТРЕБОВАНИЕ.
+Мой ноутбук НЕ должен участвовать в работе системы.
+Я могу:
+выключить ноутбук;
+закрыть браузер;
+отключить интернет на ноутбуке.
+Система продолжает:
+scheduler;
+worker;
+публикации;
+AI analysis;
+analytics;
+notifications.
+Всё работает на VPS/cloud.
+73. DOCKER
+Создать:
+docker-compose.yml
+Services:
+frontend
+backend
+worker
+scheduler
+postgres
+redis
+nginx
+Все:
+restart: unless-stopped
+74. SYSTEMD
+Если deployment использует systemd, создать:
+instagram-manager.service
+Он должен автоматически запускать приложение после reboot.
+75. NGINX
+Добавить:
+HTTPS
+reverse proxy
+compression
+security headers
+76. ENVIRONMENT
+Создать:
+.env.example
+Переменные:
+DATABASE_URL
+REDIS_URL
+SECRET_KEY
+ENCRYPTION_KEY
+META_CLIENT_ID
+META_CLIENT_SECRET
+AI_API_KEY
+S3_ENDPOINT
+S3_ACCESS_KEY
+S3_SECRET_KEY
+S3_BUCKET
+TELEGRAM_BOT_TOKEN
+ADMIN_CHAT_ID
+77. TELEGRAM NOTIFICATIONS
+Отправлять:
+Successful publication
+Failed publication
+Account error
+AI viral alert
+Worker error
+Daily report
+78. VIRAL ALERT
+Если видео значительно превысило обычный результат аккаунта:
+например:
+average = 5K
+current = 50K
+Отправить:
+🚀 VIRAL ALERT
+
+@account1
+
+Video #42
+
+Views:
+50,000
+
+Account average:
+5,000
+
+Performance:
++900%
+
+AI analysis started.
+79. AI VIRAL RESPONSE
+После viral alert AI должен автоматически:
+зафиксировать признаки ролика;
+сравнить с предыдущими успешными роликами;
+определить вероятные причины;
+обновить Account AI Profile;
+предложить следующие content patterns;
+предложить CTA/caption strategy;
+предложить оптимальное время для следующих публикаций.
+НЕ публиковать автоматически копии вирусного ролика.
+80. CONTENT FATIGUE
+AI должен обнаруживать:
+одинаковые темы;
+одинаковые hooks;
+слишком частое повторение;
+падение performance.
+Если performance падает:
+CONTENT FATIGUE DETECTED
+и предложить новые темы.
+81. TOPIC ROTATION
+Создать:
+Topic clusters.
+Например:
+A
+B
+C
+D
+AI распределяет контент, чтобы не публиковать одну и ту же тему бесконечно.
+82. CONTENT CALENDAR AI
+AI может создать недельный план:
+Monday
+Topic A
+Tuesday
+Topic C
+Wednesday
+Topic B
+Thursday
+Topic A
+Friday
+Topic D
+Saturday
+Topic B
+Sunday
+Experiment
+83. LINK TRACKING
+Если используется собственный redirect/tracking domain и это допустимо для пользователя, создать:
+unique campaign links.
+Например:
+Campaign
+Account
+Video
+Собирать:
+clicks
+timestamp
+source
+campaign
+Не собирать лишние персональные данные.
+84. CAMPAIGN ATTRIBUTION
+Связывать:
+Video
+→ Profile
+→ Campaign
+→ Link click
+Чтобы видеть:
+какое видео реально приводит переходы.
+85. UTM
+Поддержать UTM:
+utm_source
+utm_medium
+utm_campaign
+utm_content
+86. MAIN BUSINESS METRIC
+Создать:
+VIEW → PROFILE → LINK FUNNEL
+И:
+COST / RESULT
+если используются платные AI/storage/API services.
+87. AI ROI
+Показывать:
+AI-generated recommendations
+accepted recommendations
+performance after recommendation
+Чтобы понимать, действительно ли AI помогает.
+88. RECOMMENDATION HISTORY
+Каждая рекомендация:
+id
+account
+date
+recommendation
+reason
+confidence
+accepted
+result
+89. AI LEARNING
+После каждой публикации:
+collect metrics
+После накопления данных:
+update model
+После эксперимента:
+record winner
+После viral:
+extract patterns
+После failure:
+extract negative patterns.
+90. NO BLIND AUTOMATION
+AI не должен бесконечно менять стратегию после одного ролика.
+Использовать minimum sample size.
+Не делать сильный вывод на основе одного видео.
+91. PRODUCTION QUALITY
+Код:
+clean
+typed
+modular
+tested
+documented.
+Python:
+3.12+
+Backend:
+FastAPI
+Database:
+PostgreSQL 16
+Cache/Queue:
+Redis 7
+ORM:
+SQLAlchemy Async
+Migration:
+Alembic
+Frontend:
+современный React/Next.js либо существующий frontend проекта.
+Worker:
+Celery/RQ/Arq либо другой надёжный Redis-based worker.
+92. OBSERVABILITY
+Добавить:
+structured logs
+request IDs
+task IDs
+metrics
+health endpoints
+Например:
+/health
+/ready
+/metrics
+93. TESTING
+Проверить:
+Account creation
+OAuth
+Video upload
+Bulk upload
+Video processing
+AI analysis
+Schedule generation
+Timezone
+Queue
+Retry
+Pause
+Resume
+Duplicate protection
+Analytics
+AI recommendation
+AI profile
+Worker restart
+Scheduler restart
+Database recovery
+Backup
+Restore
+94. FAILURE TEST
+Специально протестировать:
+Worker crash.
+После restart:
+очередь продолжает работу.
+Scheduler crash.
+После restart:
+задачи не дублируются.
+Database restart.
+После восстановления:
+система продолжает работу.
+Network profile failure.
+Только конкретный аккаунт переходит в error.
+95. FINAL ACCEPTANCE TEST
+Создать:
+3 Instagram accounts.
+Account 1:
+4h
+Account 2:
+5h
+Account 3:
+6h
+Загрузить:
+4 videos.
+Назначить все 4 на все аккаунты.
+Создать preview.
+Подтвердить.
+Проверить:
+12 publication tasks.
+Каждая task должна иметь:
+account
+video
+schedule
+status.
+Затем:
+добавить статистику.
+AI должен создать:
+account profile
+video analysis
+recommendations.
+После следующей публикации:
+AI должен сравнить результат с предыдущими.
+96. IMPORTANT: НЕ ПОДМЕНЯТЬ РЕАЛЬНЫЕ API
+Не создавать fake Instagram API.
+Не создавать fake views.
+Не создавать fake link clicks.
+Если конкретная статистика недоступна официальным API:
+показать N/A.
+97. IMPORTANT: COMPLIANCE
+Использовать официальные API и разрешённые способы публикации.
+НЕ реализовывать:
+fake views;
+fake likes;
+fake followers;
+engagement bots;
+CAPTCHA bypass;
+2FA bypass;
+stolen sessions;
+stolen cookies;
+mass account abuse;
+обход ограничений платформы;
+автоматизацию, предназначенную для сокрытия нарушения правил платформы.
+Network profiles предназначены для легитимной сетевой изоляции/маршрутизации, а НЕ для обхода блокировок.
+98. USER EXPERIENCE
+Основная работа должна занимать минимум действий.
+Идеальный flow:
+UPLOAD VIDEOS
+↓
+SELECT ACCOUNTS
+↓
+AI ANALYZE
+↓
+AI PREPARES CAPTION/HASHTAGS/CTA
+↓
+AI RECOMMENDS TIME
+↓
+PREVIEW
+↓
+APPROVE
+↓
+QUEUE
+↓
+PUBLISH
+↓
+ANALYZE
+99. НЕ ДЕЛАТЬ ПЕРЕГРУЖЕННУЮ АДМИНКУ
+Несмотря на большое количество функций, основные действия должны быть очевидны.
+Главные кнопки:
+ADD ACCOUNT
+UPLOAD VIDEO
+AI ANALYZE
+CREATE SCHEDULE
+VIEW QUEUE
+ANALYTICS
+AI INTELLIGENCE
+ERRORS
+100. FINAL PRODUCT
+Название:
+AI INSTAGRAM GROWTH COMMAND CENTER
+Главная идея:
+Я загружаю видео.
+Система анализирует видео.
+AI подготавливает:
+caption
+hashtags
+CTA
+posting time
+content strategy
+Я выбираю аккаунты.
+Система создаёт независимые очереди.
+Каждый аккаунт имеет своё расписание.
+Система публикует через разрешённый официальный API.
+После публикации собираются реальные данные.
+AI анализирует:
+почему ролик получил результат.
+AI сравнивает:
+успешные и неуспешные видео.
+AI обновляет профиль аккаунта.
+AI предлагает стратегию следующего контента.
+Главный funnel:
+VIEWS → PROFILE VISITS → LINK CLICKS
+Главная цель:
+МАКСИМИЗИРОВАТЬ РЕАЛЬНЫЕ ОРГАНИЧЕСКИЕ ПРОСМОТРЫ И ПЕРЕВОДИТЬ ИХ В ПЕРЕХОДЫ В ПРОФИЛЬ И ПО ССЫЛКЕ.
+101. ПЕРЕД НАПИСАНИЕМ КОДА
+Сначала полностью проанализируй существующий репозиторий.
+Покажи:
+структуру;
+backend;
+frontend;
+database;
+deployment;
+существующие функции;
+проблемы.
+НЕ удаляй существующий рабочий функционал.
+Работай по принципу:
+AUDIT
+→ PLAN
+→ IMPLEMENT
+→ MIGRATE
+→ TEST
+→ FIX
+→ DEPLOY
+102. ПОСЛЕ РАЗРАБОТКИ
+Не просто напиши код.
+Самостоятельно:
+Запусти проект.
+Проверь backend.
+Проверь frontend.
+Проверь database.
+Проверь Redis.
+Проверь worker.
+Проверь scheduler.
+Проверь AI.
+Проверь upload.
+Проверь queue.
+Проверь schedule.
+Проверь restart.
+Проверь Docker.
+Проверь logs.
+Проверь health endpoints.
+Исправь найденные ошибки.
+103. DEPLOYMENT
+Система должна быть готова для VPS.
+После:
+docker compose up -d
+она должна работать в фоне.
+После:
+sudo reboot
+она должна автоматически восстановиться.
+После закрытия моего ноутбука система должна продолжать работу на сервере.
+104. ПОСЛЕДНЕЕ И ГЛАВНОЕ ПРАВИЛО
+НЕ делай систему, которая просто публикует видео.
+Сделай систему, которая:
+НАБЛЮДАЕТ → АНАЛИЗИРУЕТ → УЧИТСЯ → ЭКСПЕРИМЕНТИРУЕТ → ОПТИМИЗИРУЕТ.
+Каждый новый опубликованный ролик должен увеличивать объём данных, на основании которых система принимает следующие решения.
+Главная цель всей архитектуры:
+БОЛЬШЕ РЕАЛЬНЫХ ПРОСМОТРОВ
+БОЛЬШЕ ПЕРЕХОДОВ В ПРОФИЛЬ
+БОЛЬШЕ ПЕРЕХОДОВ ПО ССЫЛКЕ
+ПРИ ЭТОМ БЕЗ ФАЛЬШИВОЙ АКТИВНОСТИ И ОБХОДА ОГРАНИЧЕНИЙ ПЛАТФОРМЫ.
