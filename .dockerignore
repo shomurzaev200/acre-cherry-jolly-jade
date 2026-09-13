@@ -13,3 +13,8 @@ acre-cherry-jolly-jade
 .env
 .env.local
 coverage
+.grok/skills
+.grok/references
+.grok/fonts
+.grok/og-raw.png
+.grok/og-atmosphere.jpg

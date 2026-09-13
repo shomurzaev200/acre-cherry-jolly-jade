@@ -10,45 +10,47 @@
 
 ## Если уже ломалось (твой случай)
 
-Вставь **одним блоком** на сервере:
+Docker build на маленьком VPS часто рвётся: контекст 1 МБ уходит минутами, образ
+Node так и не скачивается. **Сборки больше нет** — берём готовый `node:22`.
+
+Вставь **одним блоком**:
 
 ```bash
 sudo systemctl stop instagram-manager 2>/dev/null || true
+sudo systemctl restart docker
+sleep 8
 cd /opt
-# старый /opt/pulse мог быть неполным + вложенный второй клон
-sudo rm -rf /opt/pulse
-sudo mkdir -p /opt/pulse
-sudo chown "$USER:$USER" /opt/pulse
-git clone https://github.com/shomurzaev200/acre-cherry-jolly-jade.git pulse
+# если клон кривой — сотри и клонируй заново
+if [ ! -f /opt/pulse/docker-compose.yml ]; then
+  sudo rm -rf /opt/pulse
+  sudo mkdir -p /opt/pulse
+  sudo chown "$USER:$USER" /opt/pulse
+  git clone https://github.com/shomurzaev200/acre-cherry-jolly-jade.git pulse
+fi
 cd /opt/pulse
-docker compose down --remove-orphans 2>/dev/null || true
-docker compose up -d --build
-docker compose ps
-sleep 20
-curl -s http://127.0.0.1:8080/api/health
-echo
-echo "Открой http://$(curl -s ifconfig.me)   или   http://$(curl -s ifconfig.me):8080"
+git fetch origin
+git reset --hard origin/main
+chmod +x deploy/vps-up.sh
+./deploy/vps-up.sh
 ```
 
-Репозиторий **приватный**. `git clone` спросит логин = `shomurzaev200`, пароль =
-[Personal Access Token](https://github.com/settings/tokens) с правом `repo`
-(не пароль аккаунта GitHub).
-
-Если билд идёт долго — это нормально (первый раз тянет Node 22 + Postgres + npm).
-Смотри лог:
+Первый запуск качает 4 образа и делает `npm ci` внутри контейнера (2–5 мин).
+Смотри лог, если скрипт ещё крутится:
 
 ```bash
 cd /opt/pulse
 docker compose logs -f app
 ```
 
-Потом включи автозапуск:
+Когда `curl http://127.0.0.1:8080/api/health` вернёт `{"status":"ok"...}`:
 
 ```bash
 sudo cp /opt/pulse/deploy/instagram-manager.service /etc/systemd/system/instagram-manager.service
 sudo systemctl daemon-reload
 sudo systemctl enable instagram-manager.service
 ```
+
+Репозиторий публичный: https://github.com/shomurzaev200/acre-cherry-jolly-jade
 
 ## 1. Чистый сервер (первый раз)
 
@@ -97,7 +99,7 @@ xAI Grok (объяснения по кнопке, не обязательно): 
 
 ```bash
 cd /opt/pulse
-docker compose up -d --build
+docker compose up -d
 docker compose ps
 curl -s http://127.0.0.1:8080/api/health
 ```

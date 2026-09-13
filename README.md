@@ -29,10 +29,15 @@ cd /opt
 git clone https://github.com/shomurzaev200/acre-cherry-jolly-jade.git pulse
 cd pulse
 
-# 3) Запуск
-docker compose up -d --build
-docker compose ps
-curl -s http://127.0.0.1:8080/api/health
+# 3) Запуск (без docker build)
+sudo systemctl restart docker
+sleep 6
+docker pull node:22-bookworm-slim
+docker pull postgres:16-alpine
+docker pull redis:7-alpine
+docker pull nginx:1.27-alpine
+docker compose up -d
+docker compose logs -f app
 ```
 
 Открой `http://IP_СЕРВЕРА` (порт 80) или `http://IP_СЕРВЕРА:8080`.
