@@ -16,6 +16,7 @@ import {
   weekdayFromIso,
 } from "@/lib/engine";
 import { analysisFor, buildDemoSeed, CTA, CLUSTERS, DEMO_VIDEOS } from "@/lib/seed-data";
+import { geminiCopy, localCasinoCopy, sendTelegram } from "@/lib/copy-engine";
 import type {
   AiProfile,
   Experiment,
@@ -114,7 +115,15 @@ type AccRow = {
   bio: string;
   profile_link: string;
   meta_connected: boolean;
+  meta_access_token?: string;
+  ig_business_id?: string;
 };
+
+function maskSecret(value: string | null | undefined): string | null {
+  const v = (value ?? "").trim();
+  if (v.length < 8) return v ? "••••" : null;
+  return `••••${v.slice(-4)}`;
+}
 
 function mapAccount(r: AccRow): IgAccount {
   return {
@@ -132,7 +141,9 @@ function mapAccount(r: AccRow): IgAccount {
     followers: r.followers,
     bio: r.bio,
     profileLink: r.profile_link,
-    metaConnected: r.meta_connected,
+    metaConnected: Boolean(r.meta_connected) || Boolean((r.meta_access_token ?? "").trim()),
+    metaTokenHint: maskSecret(r.meta_access_token),
+    igBusinessId: (r.ig_business_id ?? "").trim() || null,
   };
 }
 
@@ -140,6 +151,33 @@ async function loadAccounts(userId: string): Promise<IgAccount[]> {
   const sql = await getSql();
   const rows = await sql<AccRow>`select * from ig_accounts where user_id = ${userId} order by handle`;
   return rows.map(mapAccount);
+}
+
+async function loadIntegrationsPublic(userId: string) {
+  const sql = await getSql();
+  try {
+    const rows = await sql<{
+      telegram_bot_token: string;
+      telegram_chat_id: string;
+      gemini_api_key: string;
+    }>`select telegram_bot_token, telegram_chat_id, gemini_api_key from user_integrations where user_id = ${userId}`;
+    const r = rows[0];
+    return {
+      telegramBotSet: Boolean(r?.telegram_bot_token),
+      telegramBotHint: maskSecret(r?.telegram_bot_token),
+      telegramChatId: r?.telegram_chat_id ?? "",
+      geminiSet: Boolean(r?.gemini_api_key),
+      geminiHint: maskSecret(r?.gemini_api_key),
+    };
+  } catch {
+    return {
+      telegramBotSet: false,
+      telegramBotHint: null,
+      telegramChatId: "",
+      geminiSet: false,
+      geminiHint: null,
+    };
+  }
 }
 
 async function loadAnalytics(userId: string, accountId?: string): Promise<VideoAnalytic[]> {
@@ -435,6 +473,7 @@ export const getSnapshot = createServerFn({ method: "GET" })
       errors,
       viralAlerts: scored.filter((s) => s.outlier === "viral"),
       fatigue: fatigueFrom(scored, videos, accounts),
+      integrations: await loadIntegrationsPublic(userId),
     };
   });
 
@@ -545,6 +584,22 @@ export const tickScheduler = createServerFn({ method: "POST" })
       await sql`update publication_tasks set status = 'awaiting_official_api', error = ${"Публикация только через официальный Meta Graph API. Аккаунт не подключён — задача не имитирует публикацию и не создаёт fake views."} where id = ${row.id} and user_id = ${context.userId}`;
       processed += 1;
     }
+    if (processed > 0) {
+      try {
+        const integ = await sql<{ telegram_bot_token: string; telegram_chat_id: string }>`select telegram_bot_token, telegram_chat_id from user_integrations where user_id = ${context.userId}`;
+        const tok = integ[0]?.telegram_bot_token?.trim();
+        const chat = integ[0]?.telegram_chat_id?.trim();
+        if (tok && chat) {
+          await sendTelegram(
+            tok,
+            chat,
+            `PULSE: ${processed} задач дошли до слота, но ждут официальный Meta Graph API. Пароль Instagram не используется.`,
+          );
+        }
+      } catch {
+        /* alerts must never block the queue */
+      }
+    }
     await sql`insert into audit_logs (id, user_id, actor, action, detail) values (${nid("log")}, ${context.userId}, 'scheduler', 'tick', ${"processed=" + processed})`;
     return { processed };
   });
@@ -592,6 +647,13 @@ export const massAssign = createServerFn({ method: "POST" })
     const analytics = await loadAnalytics(context.userId);
     const profilesRows = await sql<Record<string, unknown>>`select * from account_ai_profiles where user_id = ${context.userId}`;
     const profiles = profilesRows.map(mapProfile);
+    let geminiKey = "";
+    try {
+      const integRows = await sql<{ gemini_api_key: string }>`select gemini_api_key from user_integrations where user_id = ${context.userId}`;
+      geminiKey = integRows[0]?.gemini_api_key?.trim() ?? "";
+    } catch {
+      geminiKey = "";
+    }
     const created: string[] = [];
     const now = Date.now();
     for (const acc of selected) {
@@ -617,12 +679,21 @@ export const massAssign = createServerFn({ method: "POST" })
         const exists = await sql<{ id: string }>`select id from publication_tasks where user_id = ${context.userId} and idempotency_key = ${idem}`;
         if (exists[0]) continue;
         const pred = predictFor({ sample, hourBoost: 1 });
-        const caption = `${prof?.bestCta || CTA.profile}`;
-        const tags = CLUSTERS[vid.topic_cluster] ?? CLUSTERS.A;
+        const copy = geminiKey
+          ? await geminiCopy({
+              apiKey: geminiKey,
+              title: vid.title,
+              niche: acc.niche,
+              handle: acc.handle,
+              durationSec: vid.duration_sec,
+            })
+          : localCasinoCopy({ title: vid.title, niche: acc.niche, handle: acc.handle });
+        const caption = copy.caption;
+        const tags = copy.hashtags;
         const status = acc.requireApproval ? "pending_approval" : "queued";
         const id = nid("task");
         await sql`insert into publication_tasks (id, user_id, account_id, video_id, scheduled_at, status, caption, hashtags, cta, hashtag_cluster, predicted_views_lo, predicted_views_hi, predicted_profile_lo, predicted_profile_hi, predicted_clicks_lo, predicted_clicks_hi, prediction_confidence, idempotency_key)
-          values (${id}, ${context.userId}, ${acc.id}, ${vid.id}, ${when.toISOString()}, ${status}, ${caption}, ${tags}, ${caption}, ${vid.topic_cluster}, ${pred.viewsLo}, ${pred.viewsHi}, ${pred.profileLo}, ${pred.profileHi}, ${pred.clicksLo}, ${pred.clicksHi}, ${pred.confidence}, ${idem})`;
+          values (${id}, ${context.userId}, ${acc.id}, ${vid.id}, ${when.toISOString()}, ${status}, ${caption}, ${tags}, ${copy.cta}, ${vid.topic_cluster}, ${pred.viewsLo}, ${pred.viewsHi}, ${pred.profileLo}, ${pred.profileHi}, ${pred.clicksLo}, ${pred.clicksHi}, ${pred.confidence}, ${idem})`;
         created.push(id);
         offset += 1;
       }
@@ -940,6 +1011,89 @@ export const setAccountNetwork = createServerFn({ method: "POST" })
     const sql = await getSql();
     await sql`update ig_accounts set network_profile_id = ${data.networkId} where id = ${data.accountId} and user_id = ${context.userId}`;
     return { ok: true as const };
+  });
+
+export const deleteAccount = createServerFn({ method: "POST" })
+  .validator((input: { id: string }) => input)
+  .middleware([authMiddleware])
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const acc = await sql<{ id: string; handle: string }>`select id, handle from ig_accounts where id = ${data.id} and user_id = ${context.userId}`;
+    if (!acc[0]) return { ok: false as const, error: "not found" };
+    await sql`delete from publication_tasks where account_id = ${data.id} and user_id = ${context.userId}`;
+    await sql`delete from video_analytics where account_id = ${data.id} and user_id = ${context.userId}`;
+    await sql`delete from experiments where account_id = ${data.id} and user_id = ${context.userId}`;
+    await sql`delete from account_ai_profiles where account_id = ${data.id} and user_id = ${context.userId}`;
+    await sql`delete from ai_recommendations where account_id = ${data.id} and user_id = ${context.userId}`;
+    await sql`delete from ig_accounts where id = ${data.id} and user_id = ${context.userId}`;
+    await sql`insert into audit_logs (id, user_id, actor, action, target, detail) values (${nid("log")}, ${context.userId}, 'admin', 'DELETE_ACCOUNT', ${data.id}, ${acc[0].handle})`;
+    return { ok: true as const };
+  });
+
+export const connectMetaAccount = createServerFn({ method: "POST" })
+  .validator((input: { id: string; igBusinessId: string; accessToken: string }) => input)
+  .middleware([authMiddleware])
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const token = data.accessToken.trim();
+    const ig = data.igBusinessId.trim();
+    if (!token || !ig) return { ok: false as const, error: "Нужны IG Business ID и токен Graph API" };
+    await sql`update ig_accounts set meta_access_token = ${token}, ig_business_id = ${ig}, meta_connected = true where id = ${data.id} and user_id = ${context.userId}`;
+    await sql`insert into audit_logs (id, user_id, actor, action, target, detail) values (${nid("log")}, ${context.userId}, 'admin', 'META_CONNECT', ${data.id}, ${"ig=" + ig})`;
+    return { ok: true as const, hint: maskSecret(token) };
+  });
+
+export const saveIntegrations = createServerFn({ method: "POST" })
+  .validator(
+    (input: {
+      telegramBotToken?: string;
+      telegramChatId?: string;
+      geminiApiKey?: string;
+    }) => input,
+  )
+  .middleware([authMiddleware])
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    await sql`insert into user_integrations (user_id) values (${context.userId}) on conflict (user_id) do nothing`;
+    const cur = await sql<{
+      telegram_bot_token: string;
+      telegram_chat_id: string;
+      gemini_api_key: string;
+    }>`select telegram_bot_token, telegram_chat_id, gemini_api_key from user_integrations where user_id = ${context.userId}`;
+    const bot =
+      data.telegramBotToken && data.telegramBotToken !== "KEEP"
+        ? data.telegramBotToken.trim()
+        : (cur[0]?.telegram_bot_token ?? "");
+    const chat =
+      data.telegramChatId !== undefined ? data.telegramChatId.trim() : (cur[0]?.telegram_chat_id ?? "");
+    const gem =
+      data.geminiApiKey && data.geminiApiKey !== "KEEP"
+        ? data.geminiApiKey.trim()
+        : (cur[0]?.gemini_api_key ?? "");
+    await sql`update user_integrations set telegram_bot_token = ${bot}, telegram_chat_id = ${chat}, gemini_api_key = ${gem}, updated_at = ${new Date().toISOString()} where user_id = ${context.userId}`;
+    return { ok: true as const };
+  });
+
+export const testTelegram = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    const rows = await sql<{ telegram_bot_token: string; telegram_chat_id: string }>`select telegram_bot_token, telegram_chat_id from user_integrations where user_id = ${context.userId}`;
+    const tok = rows[0]?.telegram_bot_token?.trim();
+    const chat = rows[0]?.telegram_chat_id?.trim();
+    if (!tok || !chat) return { ok: false as const, error: "Сначала сохрани токен бота и chat id / @channel" };
+    return sendTelegram(tok, chat, "PULSE: тест алерта. Если видишь это — канал подключён.");
+  });
+
+export const generateCopy = createServerFn({ method: "POST" })
+  .validator((input: { title: string; niche: string; handle: string; durationSec?: number }) => input)
+  .middleware([authMiddleware])
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const rows = await sql<{ gemini_api_key: string }>`select gemini_api_key from user_integrations where user_id = ${context.userId}`;
+    const key = rows[0]?.gemini_api_key?.trim() ?? "";
+    if (!key) return localCasinoCopy(data);
+    return geminiCopy({ apiKey: key, ...data });
   });
 
 export { confidenceFromSample, rate };

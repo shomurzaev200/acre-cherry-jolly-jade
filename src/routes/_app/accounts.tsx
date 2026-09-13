@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCompact, formatPct, hourLabel } from "@/lib/format";
 import { STATUS_RU, daysRu, modeRu } from "@/lib/labels";
-import { addAccount, setAccountStatus } from "@/lib/server/workspace";
+import { addAccount, connectMetaAccount, deleteAccount, setAccountStatus } from "@/lib/server/workspace";
 import { useWorkspace } from "@/lib/use-workspace";
 import { toast } from "sonner";
 
@@ -15,25 +15,36 @@ export const Route = createFileRoute("/_app/accounts")({ component: AccountsPage
 function AccountsPage() {
   const { data, reload } = useWorkspace();
   const [handle, setHandle] = useState("");
-  const [niche, setNiche] = useState("");
-  const [interval, setInterval] = useState("6");
+  const [niche, setNiche] = useState("casino slot");
+  const [interval, setInterval] = useState("4");
+  const [metaFor, setMetaFor] = useState<string | null>(null);
+  const [igId, setIgId] = useState("");
+  const [token, setToken] = useState("");
   if (!data) return <Skeleton className="h-40" />;
 
   return (
     <div className="space-y-6">
       <PageHeader kicker="Multi-account" title="Аккаунты" />
+      <p className="panel p-4 text-sm text-fg-muted">
+        Пароль Instagram не спрашивается и не хранится. «Добавить» создаёт карточку очереди. Чтобы реально постить —
+        на карточке жми <strong>Meta-токен</strong> (официальный Graph API). Удаление снимает аккаунт и его задачи.
+      </p>
       <form
         className="panel grid gap-3 p-4 md:grid-cols-[1fr_1fr_120px_auto]"
         onSubmit={async (e) => {
           e.preventDefault();
-          await addAccount({ data: { handle, niche, intervalHours: Number(interval) || 6 } });
+          const res = await addAccount({ data: { handle, niche, intervalHours: Number(interval) || 6 } });
+          if (!res.ok) {
+            toast.error(res.error);
+            return;
+          }
           setHandle("");
-          toast.success("Аккаунт добавлен · cold start, свои данные перезапишут общие паттерны");
+          toast.success("Карточка создана. Подключи Meta-токен, иначе посты останутся в очереди.");
           await reload();
         }}
       >
         <Input placeholder="@handle" value={handle} onChange={(e) => setHandle(e.target.value)} required />
-        <Input placeholder="Ниша" value={niche} onChange={(e) => setNiche(e.target.value)} />
+        <Input placeholder="Ниша (casino slot)" value={niche} onChange={(e) => setNiche(e.target.value)} />
         <Input
           type="number"
           min={1}
@@ -56,6 +67,7 @@ function AccountsPage() {
           const next = data.tasks
             .filter((t) => t.accountId === a.id && (t.status === "queued" || t.status === "pending_approval"))
             .sort((x, y) => +new Date(x.scheduledAt) - +new Date(y.scheduledAt))[0];
+          const isDemo = ["city.notes", "daily.craft", "north.atelier"].includes(a.handle);
           return (
             <article key={a.id} className="panel flex flex-col p-5 transition-[border,box-shadow] hover:border-cyan/30">
               <div className="flex items-start justify-between gap-2">
@@ -65,9 +77,12 @@ function AccountsPage() {
                   </Link>
                   <p className="text-xs text-fg-muted">{a.niche}</p>
                 </div>
-                <Badge tone={a.status === "ACTIVE" ? "ok" : a.status === "PAUSED" ? "warn" : "danger"}>
-                  {STATUS_RU[a.status]}
-                </Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge tone={a.status === "ACTIVE" ? "ok" : a.status === "PAUSED" ? "warn" : "danger"}>
+                    {STATUS_RU[a.status]}
+                  </Badge>
+                  <Badge tone={a.metaConnected ? "ok" : "warn"}>{a.metaConnected ? "Meta" : "нет API"}</Badge>
+                </div>
               </div>
               <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <Stat k="Подписчики" v={formatCompact(a.followers || null)} />
@@ -81,10 +96,53 @@ function AccountsPage() {
                 AI слот: {prof?.bestHours.map(hourLabel).join(" · ") || "мало данных"} · {daysRu(prof?.bestDays ?? []) || "—"}
               </p>
               <p className="mt-1 text-xs text-fg-subtle">
-                {modeRu(a.mode)} · сеть {net?.name ?? "direct"} · след. {next ? new Date(next.scheduledAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                {modeRu(a.mode)} · сеть {net?.name ?? "direct"} · след.{" "}
+                {next ? new Date(next.scheduledAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                {a.metaTokenHint ? ` · токен ${a.metaTokenHint}` : ""}
               </p>
+              {isDemo ? <p className="mt-2 text-[11px] text-warn">Демо-карточка, не живой Instagram</p> : null}
+
+              {metaFor === a.id ? (
+                <form
+                  className="mt-3 space-y-2 rounded-[var(--radius-md)] border border-line p-3"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const r = await connectMetaAccount({ data: { id: a.id, igBusinessId: igId, accessToken: token } });
+                    if (!r.ok) toast.error(r.error);
+                    else {
+                      toast.success("Meta токен сохранён на сервере");
+                      setMetaFor(null);
+                      setToken("");
+                      setIgId("");
+                      await reload();
+                    }
+                  }}
+                >
+                  <Input placeholder="IG Business Account ID" value={igId} onChange={(e) => setIgId(e.target.value)} required />
+                  <Input
+                    type="password"
+                    placeholder="Long-lived Graph token"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
+                    required
+                  />
+                  <div className="flex gap-2">
+                    <Button type="submit" size="sm">
+                      Сохранить токен
+                    </Button>
+                    <Button type="button" size="sm" variant="secondary" onClick={() => setMetaFor(null)}>
+                      Отмена
+                    </Button>
+                  </div>
+                </form>
+              ) : null}
+
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link to="/accounts/$id" params={{ id: a.id }} className="inline-flex h-8 items-center rounded-[var(--radius-sm)] border border-line px-3 text-xs hover:border-cyan/40">
+                <Link
+                  to="/accounts/$id"
+                  params={{ id: a.id }}
+                  className="inline-flex h-8 items-center rounded-[var(--radius-sm)] border border-line px-3 text-xs hover:border-cyan/40"
+                >
                   Открыть
                 </Link>
                 <Button
@@ -98,6 +156,22 @@ function AccountsPage() {
                   }}
                 >
                   {a.status === "PAUSED" ? "Запустить" : "Пауза"}
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setMetaFor(metaFor === a.id ? null : a.id)}>
+                  Meta-токен
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={async () => {
+                    if (!window.confirm(`Удалить @${a.handle} и его очередь?`)) return;
+                    const r = await deleteAccount({ data: { id: a.id } });
+                    if (!r.ok) toast.error(r.error);
+                    else toast.success("Аккаунт удалён");
+                    await reload();
+                  }}
+                >
+                  Удалить
                 </Button>
               </div>
             </article>

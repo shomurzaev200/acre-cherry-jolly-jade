@@ -1,13 +1,16 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Funnel } from "@/components/funnel";
 import { PageHeader } from "@/components/kpi";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { funnelFrom } from "@/lib/engine";
 import { formatCompact, formatPct, hourLabel } from "@/lib/format";
-import { setAccountMode, setAccountStatus } from "@/lib/server/workspace";
+import { connectMetaAccount, deleteAccount, setAccountMode, setAccountStatus } from "@/lib/server/workspace";
+import type { IgAccount } from "@/lib/types";
 import { useWorkspace } from "@/lib/use-workspace";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/accounts/$id")({ component: AccountPage });
 
@@ -197,32 +200,7 @@ function AccountPage() {
       ) : null}
 
       {tab === "Settings" ? (
-        <div className="panel flex flex-wrap gap-2 p-5">
-          <Button
-            variant="secondary"
-            onClick={async () => {
-              await setAccountStatus({ data: { id: acc.id, status: acc.status === "PAUSED" ? "ACTIVE" : "PAUSED" } });
-              await reload();
-            }}
-          >
-            {acc.status === "PAUSED" ? "Возобновить аккаунт" : "Пауза аккаунта"}
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={async () => {
-              await setAccountMode({
-                data: {
-                  id: acc.id,
-                  mode: acc.mode === "AUTOPILOT" ? "MANUAL" : "AUTOPILOT",
-                  requireApproval: acc.mode === "AUTOPILOT",
-                },
-              });
-              await reload();
-            }}
-          >
-            {acc.mode === "AUTOPILOT" ? "Перейти на ручной AI" : "Включить автопилот"}
-          </Button>
-        </div>
+        <AccountSettings acc={acc} reload={reload} />
       ) : null}
     </div>
   );
@@ -233,6 +211,79 @@ function Row({ k, v }: { k: string; v: string }) {
     <div className="flex justify-between gap-4">
       <dt className="text-fg-subtle">{k}</dt>
       <dd className="max-w-[60%] text-right">{v}</dd>
+    </div>
+  );
+}
+
+function AccountSettings({ acc, reload }: { acc: IgAccount; reload: () => Promise<void> }) {
+  const navigate = useNavigate();
+  const [igId, setIgId] = useState(acc.igBusinessId ?? "");
+  const [token, setToken] = useState("");
+
+  return (
+    <div className="space-y-4">
+      <div className="panel space-y-3 p-5 text-sm">
+        <p className="font-medium">Официальный Meta Graph API</p>
+        <p className="text-fg-muted">
+          Пароль Instagram не принимается. Нужен Instagram Business/Creator + long-lived token из Graph Explorer.
+          Сейчас: {acc.metaConnected ? `подключён ${acc.metaTokenHint}` : "не подключён — посты не уйдут в IG"}.
+        </p>
+        <Input placeholder="IG Business Account ID" value={igId} onChange={(e) => setIgId(e.target.value)} />
+        <Input type="password" placeholder="Access token" value={token} onChange={(e) => setToken(e.target.value)} />
+        <Button
+          onClick={async () => {
+            const r = await connectMetaAccount({ data: { id: acc.id, igBusinessId: igId, accessToken: token } });
+            if (!r.ok) toast.error(r.error);
+            else {
+              toast.success("Токен сохранён");
+              setToken("");
+              await reload();
+            }
+          }}
+        >
+          Сохранить токен
+        </Button>
+      </div>
+      <div className="panel flex flex-wrap gap-2 p-5">
+        <Button
+          variant="secondary"
+          onClick={async () => {
+            await setAccountStatus({ data: { id: acc.id, status: acc.status === "PAUSED" ? "ACTIVE" : "PAUSED" } });
+            await reload();
+          }}
+        >
+          {acc.status === "PAUSED" ? "Возобновить аккаунт" : "Пауза аккаунта"}
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={async () => {
+            await setAccountMode({
+              data: {
+                id: acc.id,
+                mode: acc.mode === "AUTOPILOT" ? "MANUAL" : "AUTOPILOT",
+                requireApproval: acc.mode === "AUTOPILOT",
+              },
+            });
+            await reload();
+          }}
+        >
+          {acc.mode === "AUTOPILOT" ? "Перейти на ручной AI" : "Включить автопилот"}
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={async () => {
+            if (!window.confirm(`Удалить @${acc.handle}?`)) return;
+            const r = await deleteAccount({ data: { id: acc.id } });
+            if (!r.ok) toast.error(r.error);
+            else {
+              toast.success("Удалён");
+              await navigate({ to: "/accounts" });
+            }
+          }}
+        >
+          Удалить аккаунт
+        </Button>
+      </div>
     </div>
   );
 }

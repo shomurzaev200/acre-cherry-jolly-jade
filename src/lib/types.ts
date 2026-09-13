@@ -28,6 +28,8 @@ export type IgAccount = {
   bio: string;
   profileLink: string;
   metaConnected: boolean;
+  metaTokenHint: string | null;
+  igBusinessId: string | null;
 };
 
 export type NetworkProfile = {
@@ -229,4 +231,11 @@ export type WorkspaceSnapshot = {
   errors: number;
   viralAlerts: ScoredRow[];
   fatigue: { accountId: string; handle: string; topic: string; message: string }[];
+  integrations: {
+    telegramBotSet: boolean;
+    telegramBotHint: string | null;
+    telegramChatId: string;
+    geminiSet: boolean;
+    geminiHint: string | null;
+  };
 };
