@@ -6,7 +6,6 @@ import { median } from "@/lib/utils";
 import {
   buildProfile,
   confidenceFromSample,
-  diagnoseFunnel,
   factorBars,
   funnelFrom,
   hourFromIso,
@@ -20,7 +19,6 @@ import { analysisFor, buildDemoSeed, CTA, CLUSTERS, DEMO_VIDEOS } from "@/lib/se
 import type {
   AiProfile,
   Experiment,
-  FunnelTotals,
   IgAccount,
   NetworkProfile,
   NotificationRow,
@@ -579,24 +577,8 @@ export const addVideo = createServerFn({ method: "POST" })
   .validator((input: { title: string; durationSec: number; topic: string; hookStyle: string; cluster: string }) => input)
   .middleware([authMiddleware])
   .handler(async ({ context, data }) => {
-    const sql = await getSql();
-    const id = nid("vid");
-    const cluster = (data.cluster || "A").slice(0, 1).toUpperCase();
-    await sql`insert into videos (id, user_id, title, duration_sec, topic, topic_cluster, hook_style, language, status, thumbnail_seed, original_name)
-      values (${id}, ${context.userId}, ${data.title.trim() || "Untitled"}, ${data.durationSec || 18}, ${data.topic || "General"}, ${cluster}, ${data.hookStyle || "Question"}, 'ru', 'ready', ${String((Date.now() % 9) + 1)}, ${data.title + ".mp4"})`;
-    const fake = {
-      id,
-      title: data.title,
-      durationSec: data.durationSec || 18,
-      topic: data.topic || "General",
-      topicCluster: cluster,
-      hookStyle: data.hookStyle || "Question",
-      seed: "9",
-    };
-    const an = analysisFor(fake as (typeof DEMO_VIDEOS)[number]);
-    await sql`insert into ai_video_analysis (video_id, user_id, analysis_hash, topic, category, visual_style, duration_sec, hook, hook_score, hook_reasons, has_text, has_face, has_speech, language, tone, structure, cta, audience, pace, info_density, content_score, hook_subscore, topic_subscore, retention_subscore, cta_subscore, conversion_subscore, provider)
-      values (${id}, ${context.userId}, ${"hash_" + id}, ${an.topic}, ${an.category}, ${an.visualStyle}, ${an.durationSec}, ${an.hook}, ${an.hookScore}, ${JSON.stringify(an.hookReasons)}, ${an.hasText}, ${an.hasFace}, ${an.hasSpeech}, ${an.language}, ${an.tone}, ${an.structure}, ${an.cta}, ${an.audience}, ${an.pace}, ${an.infoDensity}, ${an.contentScore}, ${an.hookSubscore}, ${an.topicSubscore}, ${an.retentionSubscore}, ${an.ctaSubscore}, ${an.conversionSubscore}, 'local_engine')`;
-    return { ok: true as const, id };
+    const res = await addVideoInner(context.userId, data);
+    return { ok: true as const, id: res.id };
   });
 
 export const massAssign = createServerFn({ method: "POST" })
@@ -786,6 +768,179 @@ export const logsFor = createServerFn({ method: "GET" })
     return rows;
   });
 
-export const funnelDiagnosis = (f: FunnelTotals) => diagnoseFunnel(f);
+export const ingestVideos = createServerFn({ method: "POST" })
+  .validator(
+    (input: {
+      items: Array<{
+        title: string;
+        durationSec: number;
+        topic: string;
+        hookStyle: string;
+        cluster: string;
+        originalName: string;
+        fileSizeKb: number;
+      }>;
+    }) => input,
+  )
+  .middleware([authMiddleware])
+  .handler(async ({ context, data }) => {
+    const created: string[] = [];
+    for (const item of data.items.slice(0, 40)) {
+      const res = await addVideoInner(context.userId, item);
+      created.push(res.id);
+    }
+    await sqlAudit(context.userId, "INGEST", `videos=${created.length}`);
+    return { ok: true as const, ids: created };
+  });
+
+async function addVideoInner(
+  userId: string,
+  data: {
+    title: string;
+    durationSec: number;
+    topic: string;
+    hookStyle: string;
+    cluster: string;
+    originalName?: string;
+    fileSizeKb?: number;
+  },
+) {
+  const sql = await getSql();
+  const id = nid("vid");
+  const cluster = (data.cluster || "A").slice(0, 1).toUpperCase();
+  const title = data.title.trim() || data.originalName || "Untitled";
+  await sql`insert into videos (id, user_id, title, duration_sec, topic, topic_cluster, hook_style, language, status, thumbnail_seed, original_name, file_size_kb)
+    values (${id}, ${userId}, ${title}, ${data.durationSec || 18}, ${data.topic || "General"}, ${cluster}, ${data.hookStyle || "Question"}, 'ru', 'ready', ${String((Date.now() % 9) + 1)}, ${data.originalName || title + ".mp4"}, ${data.fileSizeKb ?? null})`;
+  const fake = {
+    id,
+    title,
+    durationSec: data.durationSec || 18,
+    topic: data.topic || "General",
+    topicCluster: cluster,
+    hookStyle: data.hookStyle || "Question",
+    seed: "9",
+  };
+  const an = analysisFor(fake as (typeof DEMO_VIDEOS)[number]);
+  await sql`insert into ai_video_analysis (video_id, user_id, analysis_hash, topic, category, visual_style, duration_sec, hook, hook_score, hook_reasons, has_text, has_face, has_speech, language, tone, structure, cta, audience, pace, info_density, content_score, hook_subscore, topic_subscore, retention_subscore, cta_subscore, conversion_subscore, provider)
+    values (${id}, ${userId}, ${"hash_" + id}, ${an.topic}, ${an.category}, ${an.visualStyle}, ${an.durationSec}, ${an.hook}, ${an.hookScore}, ${JSON.stringify(an.hookReasons)}, ${an.hasText}, ${an.hasFace}, ${an.hasSpeech}, ${an.language}, ${an.tone}, ${an.structure}, ${an.cta}, ${an.audience}, ${an.pace}, ${an.infoDensity}, ${an.contentScore}, ${an.hookSubscore}, ${an.topicSubscore}, ${an.retentionSubscore}, ${an.ctaSubscore}, ${an.conversionSubscore}, 'local_engine')`;
+  return { id };
+}
+
+async function sqlAudit(userId: string, action: string, detail: string) {
+  const sql = await getSql();
+  await sql`insert into audit_logs (id, user_id, actor, action, detail) values (${nid("log")}, ${userId}, 'admin', ${action}, ${detail})`;
+}
+
+export const previewAssign = createServerFn({ method: "POST" })
+  .validator((input: { videoIds: string[]; accountIds: string[] }) => input)
+  .middleware([authMiddleware])
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const accounts = (await loadAccounts(context.userId)).filter((a) => data.accountIds.includes(a.id));
+    const videos = await sql<{ id: string; title: string; duration_sec: number }>`select id, title, duration_sec from videos where user_id = ${context.userId}`;
+    const profilesRows = await sql<Record<string, unknown>>`select * from account_ai_profiles where user_id = ${context.userId}`;
+    const profiles = profilesRows.map(mapProfile);
+    const slots: Array<{
+      accountId: string;
+      handle: string;
+      videoId: string;
+      title: string;
+      scheduledAt: string;
+      hour: number;
+      confidence: number;
+    }> = [];
+    const now = Date.now();
+    for (const acc of accounts) {
+      const prof = profiles.find((p) => p.accountId === acc.id);
+      let offset = 0;
+      for (const vid of videos.filter((v) => data.videoIds.includes(v.id))) {
+        const when = new Date(now + offset * acc.intervalHours * 3600000);
+        when.setUTCMinutes(0, 0, 0);
+        const hour = prof?.bestHours[offset % Math.max(prof.bestHours.length, 1)] ?? 19;
+        when.setUTCHours(hour);
+        slots.push({
+          accountId: acc.id,
+          handle: acc.handle,
+          videoId: vid.id,
+          title: vid.title,
+          scheduledAt: when.toISOString(),
+          hour,
+          confidence: prof?.confidence ?? 18,
+        });
+        offset += 1;
+      }
+    }
+    return { slots };
+  });
+
+export const upsertNetwork = createServerFn({ method: "POST" })
+  .validator(
+    (input: { name: string; region: string; proxyKind: string; proxyHost: string }) => input,
+  )
+  .middleware([authMiddleware])
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const kind = data.proxyKind === "free" || data.proxyKind === "datacenter" ? data.proxyKind : "none";
+    const warning =
+      kind === "free"
+        ? "Free proxy may be unstable or insecure. Не использовать для обхода ограничений Instagram, CAPTCHA или 2FA."
+        : kind === "none"
+          ? null
+          : "Легитимная маршрутизация. Не обход блокировок платформы.";
+    const status = kind === "free" ? "WARNING" : kind === "none" ? "HEALTHY" : "HEALTHY";
+    const id = nid("net");
+    await sql`insert into network_profiles (id, user_id, name, region, proxy_host, proxy_kind, status, latency_ms, last_check, warning)
+      values (${id}, ${context.userId}, ${data.name.trim() || "Network"}, ${data.region || "Asia/Tashkent"}, ${data.proxyHost.trim()}, ${kind}, ${status}, ${kind === "none" ? 12 : null}, ${new Date().toISOString()}, ${warning})`;
+    await sqlAudit(context.userId, "NETWORK_ADD", id);
+    return { ok: true as const, id };
+  });
+
+export const probeNetwork = createServerFn({ method: "POST" })
+  .validator((id: string) => id)
+  .middleware([authMiddleware])
+  .handler(async ({ context, data: id }) => {
+    const sql = await getSql();
+    const rows = await sql<{ proxy_kind: string; proxy_host: string }>`select proxy_kind, proxy_host from network_profiles where id = ${id} and user_id = ${context.userId}`;
+    const row = rows[0];
+    if (!row) return { ok: false as const, error: "not found" };
+    const started = Date.now();
+    let status = "HEALTHY";
+    let warning: string | null = null;
+    if (row.proxy_kind === "none" || !row.proxy_host) {
+      status = "HEALTHY";
+    } else if (row.proxy_kind === "free") {
+      status = "WARNING";
+      warning =
+        "Free proxy may be unstable or insecure. Не считать это защитой от банов и не использовать для обхода ограничений.";
+    } else {
+      status = "HEALTHY";
+      warning = "Профиль для легитимной маршрутизации. Не для обхода блокировок Instagram.";
+    }
+    if (row.proxy_host && row.proxy_kind !== "none") {
+      try {
+        const url = row.proxy_host.includes("://") ? row.proxy_host : `http://${row.proxy_host}`;
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 2200);
+        await fetch(url, { signal: ctrl.signal, method: "HEAD" }).catch(() => null);
+        clearTimeout(t);
+      } catch {
+        status = row.proxy_kind === "free" ? "DISABLED" : "WARNING";
+        warning = (warning ?? "") + " Хост не ответил в таймаут.";
+      }
+    }
+    const latency = Date.now() - started;
+    await sql`update network_profiles set status = ${status}, latency_ms = ${latency}, last_check = ${new Date().toISOString()}, warning = ${warning} where id = ${id} and user_id = ${context.userId}`;
+    return { ok: true as const, status, latencyMs: latency, warning };
+  });
+
+export const setAccountNetwork = createServerFn({ method: "POST" })
+  .validator((input: { accountId: string; networkId: string | null }) => input)
+  .middleware([authMiddleware])
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    await sql`update ig_accounts set network_profile_id = ${data.networkId} where id = ${data.accountId} and user_id = ${context.userId}`;
+    return { ok: true as const };
+  });
 
 export { confidenceFromSample, rate };
+

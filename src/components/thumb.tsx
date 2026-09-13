@@ -1,14 +1,14 @@
 import { cn } from "@/lib/utils";
 
 const PALETTES = [
-  ["#1a2228", "#5eead4"],
-  ["#1c1a24", "#d5dbe3"],
-  ["#141a1c", "#8fceaa"],
-  ["#1a1814", "#e8c07a"],
-  ["#18141a", "#c4b5a0"],
-  ["#101418", "#9aa1ab"],
-  ["#16120e", "#e07a7a"],
-  ["#12161c", "#7dd3fc"],
+  ["#0b1418", "#00d4e0"],
+  ["#120b18", "#8b5cf6"],
+  ["#0e1612", "#00e38c"],
+  ["#16120c", "#ffd166"],
+  ["#160b12", "#ff2bd6"],
+  ["#101418", "#8b93a7"],
+  ["#180b0e", "#ff3b5c"],
+  ["#0c1218", "#7dd3fc"],
 ];
 
 export function VideoThumb({
@@ -45,10 +45,8 @@ export function VideoThumb({
         <circle cx="128" cy="36" r="10" fill={fg} opacity="0.35" />
         <path d="M18 168 H142" stroke={fg} strokeWidth="2" opacity="0.4" />
       </svg>
-      <div className="absolute inset-x-0 bottom-0 p-2.5">
-        <p className="line-clamp-2 font-display text-[11px] font-semibold leading-tight text-fg">
-          {title}
-        </p>
+      <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 to-transparent p-2.5">
+        <p className="line-clamp-2 font-display text-[11px] font-semibold leading-tight text-fg">{title}</p>
       </div>
     </div>
   );

@@ -22,9 +22,9 @@ function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Daily / Weekly" title="AI Reports" />
+      <PageHeader kicker="Daily / Weekly" title="AI-отчёты" />
       <section className="panel p-5">
-        <h2 className="font-display text-lg font-semibold">AI Daily Report</h2>
+        <h2 className="font-display text-lg font-semibold">Ежедневный отчёт</h2>
         <dl className="mt-4 grid gap-3 sm:grid-cols-2 text-sm">
           <Item k="Publications" v={String(data.tasks.filter((t) => t.status === "published").length)} />
           <Item k="Total views" v={formatCompact(data.funnel.views)} />

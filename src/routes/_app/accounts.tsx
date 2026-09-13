@@ -1,12 +1,14 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { PageHeader } from "@/components/kpi";
+import { PageHeader, Skeleton } from "@/components/kpi";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCompact, formatPct, hourLabel } from "@/lib/format";
+import { STATUS_RU, daysRu, modeRu } from "@/lib/labels";
 import { addAccount, setAccountStatus } from "@/lib/server/workspace";
 import { useWorkspace } from "@/lib/use-workspace";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/accounts")({ component: AccountsPage });
 
@@ -15,7 +17,7 @@ function AccountsPage() {
   const [handle, setHandle] = useState("");
   const [niche, setNiche] = useState("");
   const [interval, setInterval] = useState("6");
-  if (!data) return <div className="h-40 animate-pulse rounded-[var(--radius-lg)] bg-bg-subtle" />;
+  if (!data) return <Skeleton className="h-40" />;
 
   return (
     <div className="space-y-6">
@@ -26,6 +28,7 @@ function AccountsPage() {
           e.preventDefault();
           await addAccount({ data: { handle, niche, intervalHours: Number(interval) || 6 } });
           setHandle("");
+          toast.success("Аккаунт добавлен · cold start, свои данные перезапишут общие паттерны");
           await reload();
         }}
       >
@@ -39,7 +42,7 @@ function AccountsPage() {
           onChange={(e) => setInterval(e.target.value)}
           aria-label="Интервал, часов"
         />
-        <Button type="submit">Add account</Button>
+        <Button type="submit">Добавить</Button>
       </form>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -47,45 +50,43 @@ function AccountsPage() {
           const prof = data.profiles.find((p) => p.accountId === a.id);
           const rows = data.scored.filter((s) => s.accountId === a.id);
           const views = rows.reduce((n, r) => n + (r.views ?? 0), 0);
+          const pv = rows.reduce((n, r) => n + (r.profileVisits ?? 0), 0);
+          const lc = rows.reduce((n, r) => n + (r.linkClicks ?? 0), 0);
           const net = data.networks.find((n) => n.id === a.networkProfileId);
+          const next = data.tasks
+            .filter((t) => t.accountId === a.id && (t.status === "queued" || t.status === "pending_approval"))
+            .sort((x, y) => +new Date(x.scheduledAt) - +new Date(y.scheduledAt))[0];
           return (
-            <article key={a.id} className="panel flex flex-col p-5">
+            <article key={a.id} className="panel flex flex-col p-5 transition-[border,box-shadow] hover:border-cyan/30">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <Link to="/accounts/$id" params={{ id: a.id }} className="font-display text-lg font-semibold hover:text-teal">
+                  <Link to="/accounts/$id" params={{ id: a.id }} className="font-display text-lg font-semibold hover:text-cyan">
                     @{a.handle}
                   </Link>
                   <p className="text-xs text-fg-muted">{a.niche}</p>
                 </div>
                 <Badge tone={a.status === "ACTIVE" ? "ok" : a.status === "PAUSED" ? "warn" : "danger"}>
-                  {a.status}
+                  {STATUS_RU[a.status]}
                 </Badge>
               </div>
               <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-fg-subtle">Followers</dt>
-                  <dd className="font-mono tabular">{formatCompact(a.followers || null)}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-fg-subtle">Views</dt>
-                  <dd className="font-mono tabular">{formatCompact(views)}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-fg-subtle">PVR</dt>
-                  <dd className="font-mono tabular">{formatPct(prof?.profileVisitRate)}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-fg-subtle">Interval</dt>
-                  <dd className="font-mono tabular">every {a.intervalHours}h</dd>
-                </div>
+                <Stat k="Подписчики" v={formatCompact(a.followers || null)} />
+                <Stat k="Просмотры" v={formatCompact(views)} />
+                <Stat k="В профиль" v={formatCompact(pv)} />
+                <Stat k="По ссылке" v={formatCompact(lc)} />
+                <Stat k="PVR" v={formatPct(prof?.profileVisitRate)} />
+                <Stat k="Интервал" v={`каждые ${a.intervalHours}ч`} />
               </dl>
-              <p className="mt-3 text-xs text-fg-muted">
-                Best hours: {prof?.bestHours.map(hourLabel).join(", ") || "insufficient data"} · AI {prof?.confidence ?? 0}%
+              <p className="mt-3 text-xs text-violet">
+                AI слот: {prof?.bestHours.map(hourLabel).join(" · ") || "мало данных"} · {daysRu(prof?.bestDays ?? []) || "—"}
               </p>
               <p className="mt-1 text-xs text-fg-subtle">
-                {a.mode} · {a.requireApproval ? "require approval" : "autopilot schedule"} · net {net?.status ?? "—"}
+                {modeRu(a.mode)} · сеть {net?.name ?? "direct"} · след. {next ? new Date(next.scheduledAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "—"}
               </p>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link to="/accounts/$id" params={{ id: a.id }} className="inline-flex h-8 items-center rounded-[var(--radius-sm)] border border-line px-3 text-xs hover:border-cyan/40">
+                  Открыть
+                </Link>
                 <Button
                   size="sm"
                   variant="secondary"
@@ -96,16 +97,22 @@ function AccountsPage() {
                     await reload();
                   }}
                 >
-                  {a.status === "PAUSED" ? "Resume" : "Pause"}
+                  {a.status === "PAUSED" ? "Запустить" : "Пауза"}
                 </Button>
-                <Link to="/accounts/$id" params={{ id: a.id }} className="text-sm text-fg-muted hover:text-fg">
-                  Открыть
-                </Link>
               </div>
             </article>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function Stat({ k, v }: { k: string; v: string }) {
+  return (
+    <div>
+      <dt className="text-[11px] uppercase tracking-wider text-fg-subtle">{k}</dt>
+      <dd className="font-mono tabular">{v}</dd>
     </div>
   );
 }

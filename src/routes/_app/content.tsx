@@ -33,14 +33,14 @@ function ContentPage() {
       />
       <div className="panel flex flex-wrap items-center gap-2 p-4">
         <Button size="sm" variant="secondary" onClick={() => setAccounts(data.accounts.map((a) => a.id))}>
-          All accounts
+          Все аккаунты
         </Button>
         {data.accounts.map((a) => (
           <button
             key={a.id}
             type="button"
             onClick={() => toggle(accounts, a.id, setAccounts)}
-            className={`h-8 rounded-full border px-3 text-xs ${accounts.includes(a.id) ? "border-teal text-teal" : "border-line text-fg-muted"}`}
+            className={`h-8 rounded-full border px-3 text-xs ${accounts.includes(a.id) ? "border-cyan text-cyan" : "border-line text-fg-muted"}`}
           >
             @{a.handle}
           </button>
@@ -54,7 +54,7 @@ function ContentPage() {
             await reload();
           }}
         >
-          Mass assign
+          Назначить слоты
         </Button>
         {msg ? <span className="text-xs text-fg-muted">{msg}</span> : null}
       </div>
@@ -69,10 +69,10 @@ function ContentPage() {
               </button>
               <div className="space-y-2 p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <Badge tone={selected ? "teal" : "neutral"}>{selected ? "Selected" : v.topicCluster}</Badge>
+                  <Badge tone={selected ? "cyan" : "neutral"}>{selected ? "Выбрано" : v.topicCluster}</Badge>
                   <span className="font-mono text-[11px] text-fg-subtle">{v.durationSec}s</span>
                 </div>
-                <Link to="/content/$id" params={{ id: v.id }} className="block text-sm font-medium hover:text-teal">
+                <Link to="/content/$id" params={{ id: v.id }} className="block text-sm font-medium hover:text-cyan">
                   {v.title}
                 </Link>
                 <p className="text-xs text-fg-muted">

@@ -11,7 +11,7 @@ function ExperimentsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Controlled tests" title="Experiment Center" />
+      <PageHeader kicker="Controlled tests" title="Эксперименты" />
       <p className="text-sm text-fg-muted">
         Одна переменная за раз. При малой выборке — Inconclusive, без уверенных выводов.
       </p>
@@ -40,7 +40,7 @@ function ExperimentsPage() {
               </div>
               <p className="mt-3 text-xs text-fg-muted">Hold constant: {e.holdConstant}</p>
               <p className="mt-2 text-sm">{e.notes}</p>
-              {e.winner ? <p className="mt-2 text-sm text-teal">Winner: {e.winner}</p> : null}
+              {e.winner ? <p className="mt-2 text-sm text-cyan">Победитель: {e.winner}</p> : null}
             </article>
           );
         })}

@@ -17,7 +17,7 @@ function HealthPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Observability" title="Health" />
+      <PageHeader kicker="Observability" title="Состояние системы" />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {health
           ? Object.entries(health).map(([k, v]) => (
@@ -33,7 +33,7 @@ function HealthPage() {
           : <div className="h-24 animate-pulse rounded-[var(--radius-lg)] bg-bg-subtle" />}
       </div>
       <section className="panel p-5">
-        <h2 className="font-display font-semibold">Audit log</h2>
+        <h2 className="font-display font-semibold">Журнал аудита</h2>
         <ul className="mt-3 space-y-2 text-xs">
           {logs.map((l) => (
             <li key={l.id} className="flex flex-wrap justify-between gap-2 border-b border-line/50 pb-2">

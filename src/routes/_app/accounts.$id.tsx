@@ -12,22 +12,22 @@ import { useWorkspace } from "@/lib/use-workspace";
 export const Route = createFileRoute("/_app/accounts/$id")({ component: AccountPage });
 
 const TABS = [
-  "Overview",
-  "Content",
-  "Schedule",
-  "Queue",
-  "Analytics",
-  "AI Intelligence",
-  "Experiments",
-  "Network",
-  "Logs",
-  "Settings",
+  { id: "Overview", label: "Обзор" },
+  { id: "Content", label: "Контент" },
+  { id: "Schedule", label: "Расписание" },
+  { id: "Queue", label: "Очередь" },
+  { id: "Analytics", label: "Аналитика" },
+  { id: "AI Intelligence", label: "AI" },
+  { id: "Experiments", label: "Эксперименты" },
+  { id: "Network", label: "Сеть" },
+  { id: "Logs", label: "Логи" },
+  { id: "Settings", label: "Настройки" },
 ] as const;
 
 function AccountPage() {
   const { id } = Route.useParams();
   const { data, reload } = useWorkspace();
-  const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
+  const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("Overview");
   const acc = data?.accounts.find((a) => a.id === id);
   const prof = data?.profiles.find((p) => p.accountId === id);
   const tasks = useMemo(() => data?.tasks.filter((t) => t.accountId === id) ?? [], [data, id]);
@@ -54,12 +54,12 @@ function AccountPage() {
       <div className="-mx-1 flex gap-1 overflow-x-auto pb-1">
         {TABS.map((t) => (
           <button
-            key={t}
+            key={t.id}
             type="button"
-            onClick={() => setTab(t)}
-            className={`h-9 shrink-0 rounded-full px-3 text-xs ${tab === t ? "bg-bg-subtle text-fg" : "text-fg-muted hover:text-fg"}`}
+            onClick={() => setTab(t.id)}
+            className={`h-9 shrink-0 rounded-full px-3 text-xs ${tab === t.id ? "bg-bg-subtle text-fg" : "text-fg-muted hover:text-fg"}`}
           >
-            {t}
+            {t.label}
           </button>
         ))}
       </div>
@@ -90,7 +90,7 @@ function AccountPage() {
         <ul className="grid gap-2">
           {scored.slice(0, 12).map((s) => (
             <li key={s.taskId} className="panel flex items-center justify-between gap-3 px-4 py-3 text-sm">
-              <Link to="/content/$id" params={{ id: s.videoId }} className="hover:text-teal">
+              <Link to="/content/$id" params={{ id: s.videoId }} className="hover:text-cyan">
                 {s.title}
               </Link>
               <span className="font-mono tabular text-fg-muted">{formatCompact(s.views)}</span>
@@ -205,7 +205,7 @@ function AccountPage() {
               await reload();
             }}
           >
-            {acc.status === "PAUSED" ? "Resume account" : "Pause account"}
+            {acc.status === "PAUSED" ? "Возобновить аккаунт" : "Пауза аккаунта"}
           </Button>
           <Button
             variant="secondary"
@@ -220,7 +220,7 @@ function AccountPage() {
               await reload();
             }}
           >
-            {acc.mode === "AUTOPILOT" ? "Switch to Manual AI" : "Switch to Autopilot"}
+            {acc.mode === "AUTOPILOT" ? "Перейти на ручной AI" : "Включить автопилот"}
           </Button>
         </div>
       ) : null}

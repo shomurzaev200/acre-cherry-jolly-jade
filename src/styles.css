@@ -1,35 +1,37 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Syne:wght@500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Syne", "IBM Plex Sans", sans-serif;
+  --font-sans: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Syne", "Manrope", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  --color-bg: #0b0c0e;
-  --color-bg-elevated: #121418;
-  --color-bg-subtle: #181b21;
-  --color-bg-hover: #1e2229;
-  --color-fg: #f1f2f4;
-  --color-fg-muted: #9aa1ab;
-  --color-fg-subtle: #6d747e;
-  --color-line: #262a31;
-  --color-line-strong: #3a404a;
-  --color-accent: #d5dbe3;
-  --color-accent-fg: #0b0c0e;
-  --color-teal: #5eead4;
-  --color-teal-dim: #134e4a;
-  --color-warn: #e8c07a;
-  --color-danger: #e07a7a;
-  --color-ok: #8fceaa;
+  --color-bg: #050509;
+  --color-bg-elevated: #0b0b12;
+  --color-bg-subtle: #11111a;
+  --color-bg-hover: #171722;
+  --color-fg: #e8ecf4;
+  --color-fg-muted: #8b93a7;
+  --color-fg-subtle: #5c6478;
+  --color-line: #1c1c28;
+  --color-line-strong: #2a2a3c;
+  --color-accent: #00d4e0;
+  --color-accent-fg: #041014;
+  --color-cyan: #00d4e0;
+  --color-violet: #8b5cf6;
+  --color-pink: #ff2bd6;
+  --color-ok: #00e38c;
+  --color-warn: #ffd166;
+  --color-danger: #ff3b5c;
 
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 18px;
+  --radius-lg: 16px;
   --radius-xl: 24px;
 
-  --shadow-soft: 0 18px 40px -28px rgb(0 0 0 / 0.7);
+  --shadow-soft: 0 22px 48px -28px rgb(0 0 0 / 0.85);
+  --shadow-glow: 0 0 28px -10px color-mix(in oklab, var(--color-cyan) 55%, transparent);
 }
 
 @layer base {
@@ -41,7 +43,10 @@
   }
   body {
     min-height: 100dvh;
-    background: var(--color-bg);
+    background:
+      radial-gradient(1200px 520px at 12% -10%, rgb(0 212 224 / 0.07), transparent 55%),
+      radial-gradient(900px 480px at 110% 0%, rgb(139 92 246 / 0.06), transparent 50%),
+      var(--color-bg);
     color: var(--color-fg);
     font-family: var(--font-sans);
   }
@@ -49,7 +54,9 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     text-wrap: balance;
     font-family: var(--font-display);
   }
@@ -59,10 +66,16 @@
   * {
     border-color: var(--color-line);
   }
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-cyan) 70%, white);
+    outline-offset: 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
@@ -78,19 +91,79 @@
 }
 
 .rail-shadow {
-  box-shadow: inset -1px 0 0 var(--color-line);
+  box-shadow: inset -1px 0 0 color-mix(in oklab, var(--color-cyan) 12%, var(--color-line));
+  background: color-mix(in oklab, var(--color-bg-elevated) 92%, black);
 }
 
 .panel {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-line);
+  background: color-mix(in oklab, var(--color-bg-elevated) 92%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-cyan) 9%, var(--color-line));
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
 }
 
+.panel-glow {
+  box-shadow: var(--shadow-soft), var(--shadow-glow);
+}
+
 .thumb-grid {
   background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+    linear-gradient(to right, rgb(0 212 224 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(0 212 224 / 0.05) 1px, transparent 1px);
   background-size: 16px 16px;
+}
+
+.nav-active {
+  background: color-mix(in oklab, var(--color-cyan) 12%, var(--color-bg-subtle));
+  color: var(--color-fg);
+  box-shadow: inset 2px 0 0 var(--color-cyan);
+}
+
+.kpi-glow {
+  text-shadow: 0 0 22px color-mix(in oklab, var(--color-cyan) 40%, transparent);
+}
+
+.ai-glow {
+  text-shadow: 0 0 22px color-mix(in oklab, var(--color-violet) 45%, transparent);
+}
+
+.pulse-dot {
+  box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 55%, transparent);
+  animation: pulse-dot 2.4s ease-out infinite;
+}
+
+@keyframes pulse-dot {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 50%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.glass-bar {
+  background: color-mix(in oklab, var(--color-bg) 78%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.scan-bar {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--color-violet) 55%, var(--color-cyan)),
+    transparent
+  );
+  animation: scan 1.6s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
 }

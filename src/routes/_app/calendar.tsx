@@ -37,7 +37,7 @@ function CalendarPage() {
                 onClick={() => setMode(m)}
                 className={`h-9 rounded-full px-3 text-xs uppercase ${mode === m ? "bg-bg-subtle" : "text-fg-muted"}`}
               >
-                {m}
+                {m === "day" ? "День" : m === "week" ? "Неделя" : "Месяц"}
               </button>
             ))}
           </div>

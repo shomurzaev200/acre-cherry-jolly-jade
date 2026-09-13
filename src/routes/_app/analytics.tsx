@@ -56,7 +56,7 @@ function AnalyticsPage() {
             {rows.map((r) => (
               <tr key={r.taskId + r.videoId} className="border-b border-line/50">
                 <td className="px-4 py-2">
-                  <Link to="/content/$id" params={{ id: r.videoId }} className="hover:text-teal">
+                  <Link to="/content/$id" params={{ id: r.videoId }} className="hover:text-cyan">
                     {r.title}
                   </Link>
                 </td>

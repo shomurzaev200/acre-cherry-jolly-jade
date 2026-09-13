@@ -18,7 +18,7 @@ function ApprovalsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Human in the loop" title="Require approval" />
+      <PageHeader kicker="Human in the loop" title="Подтверждение публикаций" />
       {!pending.length ? <p className="text-sm text-fg-muted">Нет публикаций, ждущих подтверждения.</p> : null}
       <div className="space-y-4">
         {pending.map((t) => {
@@ -49,7 +49,7 @@ function ApprovalsPage() {
                       await reload();
                     }}
                   >
-                    Approve
+                    Подтвердить
                   </Button>
                   <Button
                     size="sm"
@@ -59,7 +59,7 @@ function ApprovalsPage() {
                       await reload();
                     }}
                   >
-                    Edit
+                    Сохранить правки
                   </Button>
                   <Button
                     size="sm"
@@ -69,7 +69,7 @@ function ApprovalsPage() {
                       await reload();
                     }}
                   >
-                    Reject
+                    Отклонить
                   </Button>
                 </div>
               </div>

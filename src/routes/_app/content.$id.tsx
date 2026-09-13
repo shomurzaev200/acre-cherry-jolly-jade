@@ -128,7 +128,7 @@ function VideoPage() {
               <li key={f.key} className="grid grid-cols-[100px_1fr_40px] items-center gap-2 text-sm">
                 <span>{f.key}</span>
                 <span className="h-2 rounded-full bg-bg-subtle">
-                  <span className="block h-2 rounded-full bg-teal/70" style={{ width: `${Math.round(f.level * 100)}%` }} />
+                  <span className="block h-2 rounded-full bg-cyan/70" style={{ width: `${Math.round(f.level * 100)}%` }} />
                 </span>
                 <span className="font-mono text-xs">{"+".repeat(1 + Math.round(f.level * 2))}</span>
               </li>

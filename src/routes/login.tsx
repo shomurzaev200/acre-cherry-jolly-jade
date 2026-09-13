@@ -40,10 +40,11 @@ function Login() {
   return (
     <main className="grid min-h-dvh place-items-center bg-bg px-5 py-10 text-fg">
       <div className="w-full max-w-md">
-        <p className="font-display text-xs font-semibold tracking-[0.28em] text-fg-subtle">PULSE</p>
-        <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Command Center</h1>
+        <p className="font-display text-xs font-semibold tracking-[0.28em] text-cyan">PULSE</p>
+        <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">AI Command Center</h1>
         <p className="mt-2 text-sm text-fg-muted">
-          Воронка Views → Profile visits → Link clicks. Только официальный Meta Graph API.
+          Мультиаккаунтный контур: загрузка видео, AI-слоты, очередь и воронка Views → Profile → Link. Только
+          официальный Meta Graph API.
         </p>
 
         <div className="panel mt-8 space-y-3 p-5">
