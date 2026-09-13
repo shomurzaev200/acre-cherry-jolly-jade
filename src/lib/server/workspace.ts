@@ -17,6 +17,7 @@ import {
 } from "@/lib/engine";
 import { analysisFor, buildDemoSeed, CTA, CLUSTERS, DEMO_VIDEOS } from "@/lib/seed-data";
 import { geminiCopy, localCasinoCopy, sendTelegram } from "@/lib/copy-engine";
+import { containerStatus, createReelContainer, oauthDialogUrl, publishContainer } from "@/lib/meta-graph";
 import type {
   AiProfile,
   Experiment,
@@ -160,7 +161,9 @@ async function loadIntegrationsPublic(userId: string) {
       telegram_bot_token: string;
       telegram_chat_id: string;
       gemini_api_key: string;
-    }>`select telegram_bot_token, telegram_chat_id, gemini_api_key from user_integrations where user_id = ${userId}`;
+      meta_app_id?: string;
+      meta_app_secret?: string;
+    }>`select telegram_bot_token, telegram_chat_id, gemini_api_key, meta_app_id, meta_app_secret from user_integrations where user_id = ${userId}`;
     const r = rows[0];
     return {
       telegramBotSet: Boolean(r?.telegram_bot_token),
@@ -168,6 +171,8 @@ async function loadIntegrationsPublic(userId: string) {
       telegramChatId: r?.telegram_chat_id ?? "",
       geminiSet: Boolean(r?.gemini_api_key),
       geminiHint: maskSecret(r?.gemini_api_key),
+      metaAppId: r?.meta_app_id ?? "",
+      metaAppSet: Boolean(r?.meta_app_secret),
     };
   } catch {
     return {
@@ -176,6 +181,8 @@ async function loadIntegrationsPublic(userId: string) {
       telegramChatId: "",
       geminiSet: false,
       geminiHint: null,
+      metaAppId: "",
+      metaAppSet: false,
     };
   }
 }
@@ -399,6 +406,7 @@ export const getSnapshot = createServerFn({ method: "GET" })
       status: String(v.status),
       thumbnailSeed: String(v.thumbnail_seed),
       originalName: String(v.original_name ?? ""),
+      fileName: String(v.file_name ?? ""),
     }));
     const taskRows = await sql<Record<string, unknown>>`select id, account_id, video_id, scheduled_at::text as scheduled_at, status, caption, hashtags, cta, hashtag_cluster, predicted_views_lo, predicted_views_hi, predicted_profile_lo, predicted_profile_hi, predicted_clicks_lo, predicted_clicks_hi, prediction_confidence, attempt_count, error, idempotency_key, published_at::text as published_at from publication_tasks where user_id = ${userId} order by scheduled_at`;
     const tasks: PublicationTask[] = taskRows.map(mapTask);
@@ -563,25 +571,71 @@ export const tickScheduler = createServerFn({ method: "POST" })
     const sql = await getSql();
     const meta = await sql<{ paused_all: boolean }>`select paused_all from cc_meta where user_id = ${context.userId}`;
     if (meta[0]?.paused_all) return { processed: 0, reason: "paused_all" };
-    const due = await sql<{ id: string; account_id: string; idempotency_key: string }>`
-      select t.id, t.account_id, t.idempotency_key
+    const base = (process.env.BETTER_AUTH_URL || "").replace(/\/+$/, "");
+    const due = await sql<{
+      id: string;
+      account_id: string;
+      video_id: string;
+      caption: string;
+      hashtags: string;
+      ig_container_id: string | null;
+      status: string;
+    }>`
+      select t.id, t.account_id, t.video_id, t.caption, t.hashtags, t.ig_container_id, t.status
       from publication_tasks t
       join ig_accounts a on a.id = t.account_id
       where t.user_id = ${context.userId}
-        and t.status = 'queued'
-        and t.scheduled_at <= ${new Date().toISOString()}
         and a.status = 'ACTIVE'
+        and (
+          (t.status = 'queued' and t.scheduled_at <= ${new Date().toISOString()})
+          or (t.status = 'publishing' and t.ig_container_id is not null)
+        )
       order by t.scheduled_at
-      limit 20`;
+      limit 10`;
     let processed = 0;
+    let published = 0;
     for (const row of due) {
-      const lock = await sql<{ id: string }>`
-        update publication_tasks
-        set status = 'publishing', attempt_count = attempt_count + 1
-        where id = ${row.id} and user_id = ${context.userId} and status = 'queued'
-        returning id`;
-      if (!lock[0]) continue;
-      await sql`update publication_tasks set status = 'awaiting_official_api', error = ${"Публикация только через официальный Meta Graph API. Аккаунт не подключён — задача не имитирует публикацию и не создаёт fake views."} where id = ${row.id} and user_id = ${context.userId}`;
+      const acc = await sql<{ meta_access_token: string; ig_business_id: string; handle: string }>`
+        select meta_access_token, ig_business_id, handle from ig_accounts where id = ${row.account_id} and user_id = ${context.userId}`;
+      const token = acc[0]?.meta_access_token?.trim() ?? "";
+      const ig = acc[0]?.ig_business_id?.trim() ?? "";
+      if (!token || !ig) {
+        await sql`update publication_tasks set status = 'awaiting_official_api', error = ${"Нажми «Подключить Instagram» на карточке аккаунта. Пароль не нужен — Meta сама выдаст доступ."} where id = ${row.id} and user_id = ${context.userId}`;
+        processed += 1;
+        continue;
+      }
+      if (row.status === "publishing" && row.ig_container_id) {
+        try {
+          const st = await containerStatus({ containerId: row.ig_container_id, token });
+          const code = (st.status_code || st.status || "").toUpperCase();
+          if (code === "FINISHED" || code === "PUBLISHED") {
+            const pub = await publishContainer({ igUserId: ig, token, containerId: row.ig_container_id });
+            await sql`update publication_tasks set status = 'published', ig_media_id = ${pub.id}, published_at = ${new Date().toISOString()}, error = null where id = ${row.id} and user_id = ${context.userId}`;
+            published += 1;
+          } else if (code === "ERROR" || code === "EXPIRED") {
+            await sql`update publication_tasks set status = 'failed', error = ${"Meta отклонила контейнер: " + code} where id = ${row.id} and user_id = ${context.userId}`;
+          }
+        } catch (e) {
+          await sql`update publication_tasks set error = ${e instanceof Error ? e.message : "poll error"} where id = ${row.id} and user_id = ${context.userId}`;
+        }
+        processed += 1;
+        continue;
+      }
+      const vid = await sql<{ file_name: string; title: string }>`select file_name, title from videos where id = ${row.video_id} and user_id = ${context.userId}`;
+      const fileName = vid[0]?.file_name?.trim() ?? "";
+      if (!fileName || !base) {
+        await sql`update publication_tasks set status = 'awaiting_official_api', error = ${"Нет файла ролика или публичного URL. Залей mp4 заново в Загрузка."} where id = ${row.id} and user_id = ${context.userId}`;
+        processed += 1;
+        continue;
+      }
+      const videoUrl = `${base}/media/${fileName}`;
+      const caption = [row.caption, row.hashtags].filter(Boolean).join("\n\n");
+      try {
+        const created = await createReelContainer({ igUserId: ig, token, videoUrl, caption });
+        await sql`update publication_tasks set status = 'publishing', ig_container_id = ${created.id}, attempt_count = attempt_count + 1, error = null where id = ${row.id} and user_id = ${context.userId}`;
+      } catch (e) {
+        await sql`update publication_tasks set status = 'failed', error = ${e instanceof Error ? e.message : "Meta publish error"} where id = ${row.id} and user_id = ${context.userId}`;
+      }
       processed += 1;
     }
     if (processed > 0) {
@@ -590,18 +644,14 @@ export const tickScheduler = createServerFn({ method: "POST" })
         const tok = integ[0]?.telegram_bot_token?.trim();
         const chat = integ[0]?.telegram_chat_id?.trim();
         if (tok && chat) {
-          await sendTelegram(
-            tok,
-            chat,
-            `PULSE: ${processed} задач дошли до слота, но ждут официальный Meta Graph API. Пароль Instagram не используется.`,
-          );
+          await sendTelegram(tok, chat, `PULSE: обработано ${processed}, опубликовано ${published}.`);
         }
       } catch {
         /* alerts must never block the queue */
       }
     }
-    await sql`insert into audit_logs (id, user_id, actor, action, detail) values (${nid("log")}, ${context.userId}, 'scheduler', 'tick', ${"processed=" + processed})`;
-    return { processed };
+    await sql`insert into audit_logs (id, user_id, actor, action, detail) values (${nid("log")}, ${context.userId}, 'scheduler', 'tick', ${"processed=" + processed + " published=" + published})`;
+    return { processed, published };
   });
 
 export const acceptRecommendation = createServerFn({ method: "POST" })
@@ -756,6 +806,7 @@ export const getVideoDetail = createServerFn({ method: "GET" })
         status: String(v[0].status),
         thumbnailSeed: String(v[0].thumbnail_seed),
         originalName: String(v[0].original_name ?? ""),
+        fileName: String(v[0].file_name ?? ""),
       },
     ];
     const mappedTasks = tasks.map(mapTask);
@@ -1049,6 +1100,8 @@ export const saveIntegrations = createServerFn({ method: "POST" })
       telegramBotToken?: string;
       telegramChatId?: string;
       geminiApiKey?: string;
+      metaAppId?: string;
+      metaAppSecret?: string;
     }) => input,
   )
   .middleware([authMiddleware])
@@ -1059,18 +1112,17 @@ export const saveIntegrations = createServerFn({ method: "POST" })
       telegram_bot_token: string;
       telegram_chat_id: string;
       gemini_api_key: string;
-    }>`select telegram_bot_token, telegram_chat_id, gemini_api_key from user_integrations where user_id = ${context.userId}`;
-    const bot =
-      data.telegramBotToken && data.telegramBotToken !== "KEEP"
-        ? data.telegramBotToken.trim()
-        : (cur[0]?.telegram_bot_token ?? "");
-    const chat =
-      data.telegramChatId !== undefined ? data.telegramChatId.trim() : (cur[0]?.telegram_chat_id ?? "");
-    const gem =
-      data.geminiApiKey && data.geminiApiKey !== "KEEP"
-        ? data.geminiApiKey.trim()
-        : (cur[0]?.gemini_api_key ?? "");
-    await sql`update user_integrations set telegram_bot_token = ${bot}, telegram_chat_id = ${chat}, gemini_api_key = ${gem}, updated_at = ${new Date().toISOString()} where user_id = ${context.userId}`;
+      meta_app_id: string;
+      meta_app_secret: string;
+    }>`select telegram_bot_token, telegram_chat_id, gemini_api_key, meta_app_id, meta_app_secret from user_integrations where user_id = ${context.userId}`;
+    const keep = (next: string | undefined, prev: string, flag = "KEEP") =>
+      next && next !== flag ? next.trim() : prev;
+    const bot = keep(data.telegramBotToken, cur[0]?.telegram_bot_token ?? "");
+    const chat = data.telegramChatId !== undefined ? data.telegramChatId.trim() : (cur[0]?.telegram_chat_id ?? "");
+    const gem = keep(data.geminiApiKey, cur[0]?.gemini_api_key ?? "");
+    const appId = data.metaAppId !== undefined ? data.metaAppId.trim() : (cur[0]?.meta_app_id ?? "");
+    const appSecret = keep(data.metaAppSecret, cur[0]?.meta_app_secret ?? "");
+    await sql`update user_integrations set telegram_bot_token = ${bot}, telegram_chat_id = ${chat}, gemini_api_key = ${gem}, meta_app_id = ${appId}, meta_app_secret = ${appSecret}, updated_at = ${new Date().toISOString()} where user_id = ${context.userId}`;
     return { ok: true as const };
   });
 
@@ -1094,6 +1146,31 @@ export const generateCopy = createServerFn({ method: "POST" })
     const key = rows[0]?.gemini_api_key?.trim() ?? "";
     if (!key) return localCasinoCopy(data);
     return geminiCopy({ apiKey: key, ...data });
+  });
+
+export const startMetaConnect = createServerFn({ method: "POST" })
+  .validator((input: { accountId: string }) => input)
+  .middleware([authMiddleware])
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const acc = await sql<{ id: string }>`select id from ig_accounts where id = ${data.accountId} and user_id = ${context.userId}`;
+    if (!acc[0]) return { ok: false as const, error: "Аккаунт не найден" };
+    const integ = await sql<{ meta_app_id: string; meta_app_secret: string }>`select meta_app_id, meta_app_secret from user_integrations where user_id = ${context.userId}`;
+    const appId = integ[0]?.meta_app_id?.trim() ?? "";
+    const secret = integ[0]?.meta_app_secret?.trim() ?? "";
+    if (!appId || !secret) {
+      return {
+        ok: false as const,
+        error: "Сначала один раз сохрани Facebook App ID и App Secret в Настройках. Это не токен аккаунта — это твоё приложение, через которое Instagram даёт доступ.",
+      };
+    }
+    const base = (process.env.BETTER_AUTH_URL || "").replace(/\/+$/, "");
+    if (!base) return { ok: false as const, error: "Нет публичного URL сервера (BETTER_AUTH_URL)" };
+    const redirectUri = `${base}/api/meta/callback`;
+    const state = Buffer.from(JSON.stringify({ a: data.accountId, u: context.userId, t: Date.now() })).toString(
+      "base64url",
+    );
+    return { ok: true as const, url: oauthDialogUrl({ appId, redirectUri, state }), redirectUri };
   });
 
 export { confidenceFromSample, rate };

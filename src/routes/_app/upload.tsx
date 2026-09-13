@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { hourLabel } from "@/lib/format";
 import { HOOK_OPTIONS, HOOK_RU } from "@/lib/labels";
-import { ingestVideos, massAssign, previewAssign } from "@/lib/server/workspace";
+import { massAssign, previewAssign, tickScheduler } from "@/lib/server/workspace";
 import { useWorkspace } from "@/lib/use-workspace";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ type Draft = {
   originalName: string;
   fileSizeKb: number;
   progress: number;
+  file: File;
 };
 
 function readDuration(file: File): Promise<number> {
@@ -75,6 +76,7 @@ function UploadPage() {
         originalName: file.name,
         fileSizeKb: Math.round(file.size / 1024),
         progress: 100,
+        file,
       });
     }
     setDrafts((d) => [...d, ...next]);
@@ -87,22 +89,23 @@ function UploadPage() {
     setBusy(true);
     setPhase("analyzing");
     try {
-      const res = await ingestVideos({
-        data: {
-          items: drafts.map((d) => ({
-            title: d.title,
-            durationSec: d.durationSec,
-            topic: d.topic,
-            hookStyle: d.hookStyle,
-            cluster: d.cluster,
-            originalName: d.originalName,
-            fileSizeKb: d.fileSizeKb,
-          })),
-        },
-      });
-      setCreatedIds(res.ids);
+      const ids: string[] = [];
+      for (const d of drafts) {
+        const fd = new FormData();
+        fd.append("file", d.file);
+        fd.append("title", d.title);
+        fd.append("durationSec", String(d.durationSec));
+        fd.append("topic", d.topic || "casino slot");
+        fd.append("hookStyle", d.hookStyle);
+        fd.append("cluster", d.cluster);
+        const res = await fetch("/api/media", { method: "POST", body: fd, credentials: "include" });
+        const body = (await res.json()) as { ok?: boolean; id?: string; error?: string };
+        if (!res.ok || !body.id) throw new Error(body.error || "Не удалось сохранить файл");
+        ids.push(body.id);
+      }
+      setCreatedIds(ids);
       setPhase("done");
-      toast.success(`AI-анализ записан: ${res.ids.length} роликов. Оригинал в Postgres не кладётся.`);
+      toast.success(`Файлы на сервере: ${ids.length}. Дальше — слоты на аккаунты.`);
       await reload();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Ошибка загрузки");

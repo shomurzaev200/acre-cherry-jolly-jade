@@ -15,6 +15,8 @@ function SettingsPage() {
   const [bot, setBot] = useState("");
   const [chat, setChat] = useState("");
   const [gemini, setGemini] = useState("");
+  const [metaAppId, setMetaAppId] = useState("");
+  const [metaSecret, setMetaSecret] = useState("");
   const [busy, setBusy] = useState(false);
   const [sample, setSample] = useState<{ caption: string; hashtags: string; cta: string; provider: string } | null>(
     null,
@@ -32,6 +34,8 @@ function SettingsPage() {
           telegramBotToken: bot.trim() ? bot.trim() : "KEEP",
           telegramChatId: chat.trim() || integ.telegramChatId,
           geminiApiKey: gemini.trim() ? gemini.trim() : "KEEP",
+          metaAppId: metaAppId.trim() || integ.metaAppId,
+          metaAppSecret: metaSecret.trim() ? metaSecret.trim() : "KEEP",
         },
       });
       setBot("");
@@ -52,10 +56,49 @@ function SettingsPage() {
       <section className="panel space-y-3 p-5 text-sm">
         <h2 className="font-display font-semibold">Почему нет пароля Instagram</h2>
         <p className="text-fg-muted">
-          Instagram не отдаёт вход по логину/паролю сторонним панелям. Сбор пароля — нарушение ToS и риск бана.
-          PULSE добавляет аккаунт как <strong>карточку очереди</strong>, а публикует только через официальный{" "}
-          <strong>Meta Graph API</strong> (Business / Creator). Без токена задача = awaiting_official_api, метрики N/A.
+          «Дать доступ» = кнопка <strong>Подключить Instagram</strong> на карточке. Instagram сам открывает окно
+          Facebook и спрашивает «Разрешить». После «Разрешить» Meta отдаёт доступ (это и есть токен, ты его не
+          копируешь). Логин/пароль сторонней панели Instagram запрещает.
         </p>
+      </section>
+
+      <section className="panel space-y-4 p-5 text-sm">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-display font-semibold">Facebook-приложение (один раз)</h2>
+          <Badge tone={integ.metaAppSet ? "ok" : "warn"}>{integ.metaAppSet ? "готово к подключению" : "не задано"}</Badge>
+        </div>
+        <ol className="list-decimal space-y-1 pl-5 text-fg-muted">
+          <li>
+            Создай бесплатное приложение на{" "}
+            <a className="text-cyan underline" href="https://developers.facebook.com/apps/" target="_blank" rel="noreferrer">
+              developers.facebook.com/apps
+            </a>{" "}
+            → тип Business.
+          </li>
+          <li>Добавь продукт Instagram / Facebook Login.</li>
+          <li>
+            Valid OAuth Redirect URI: <code className="text-cyan">http://ТВОЙ_IP/api/meta/callback</code>
+          </li>
+          <li>Вставь App ID и App Secret сюда. Это ключи приложения, не пароль аккаунта.</li>
+          <li>В режиме Development подключаются только аккаунты-тестеры приложения.</li>
+        </ol>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Input
+            placeholder={integ.metaAppId ? `App ID ${integ.metaAppId}` : "Facebook App ID"}
+            value={metaAppId}
+            onChange={(e) => setMetaAppId(e.target.value)}
+          />
+          <Input
+            type="password"
+            placeholder={integ.metaAppSet ? "App Secret сохранён" : "Facebook App Secret"}
+            value={metaSecret}
+            onChange={(e) => setMetaSecret(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+        <Button disabled={busy} onClick={() => void save()}>
+          Сохранить приложение
+        </Button>
       </section>
 
       <section className="panel space-y-4 p-5 text-sm">

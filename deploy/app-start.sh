@@ -13,6 +13,7 @@ if [ -z "${BETTER_AUTH_URL:-}" ]; then
 fi
 echo "BETTER_AUTH_URL=${BETTER_AUTH_URL:-unset}"
 
+mkdir -p /app/data/uploads
 npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 node scripts/migrate.mjs
 exec npm run dev

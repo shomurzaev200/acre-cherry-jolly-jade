@@ -55,6 +55,7 @@ export type Video = {
   status: string;
   thumbnailSeed: string;
   originalName: string;
+  fileName: string;
 };
 
 export type VideoAnalysis = {
@@ -237,5 +238,7 @@ export type WorkspaceSnapshot = {
     telegramChatId: string;
     geminiSet: boolean;
     geminiHint: string | null;
+    metaAppId: string;
+    metaAppSet: boolean;
   };
 };

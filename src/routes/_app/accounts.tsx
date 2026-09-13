@@ -1,12 +1,12 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader, Skeleton } from "@/components/kpi";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCompact, formatPct, hourLabel } from "@/lib/format";
 import { STATUS_RU, daysRu, modeRu } from "@/lib/labels";
-import { addAccount, connectMetaAccount, deleteAccount, setAccountStatus } from "@/lib/server/workspace";
+import { addAccount, connectMetaAccount, deleteAccount, setAccountStatus, startMetaConnect, tickScheduler } from "@/lib/server/workspace";
 import { useWorkspace } from "@/lib/use-workspace";
 import { toast } from "sonner";
 
@@ -20,15 +20,34 @@ function AccountsPage() {
   const [metaFor, setMetaFor] = useState<string | null>(null);
   const [igId, setIgId] = useState("");
   const [token, setToken] = useState("");
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const connected = q.get("connected");
+    const metaError = q.get("meta_error");
+    if (connected) toast.success(`Instagram подключён: ${connected}`);
+    if (metaError) toast.error(metaError);
+  }, []);
   if (!data) return <Skeleton className="h-40" />;
 
   return (
     <div className="space-y-6">
       <PageHeader kicker="Multi-account" title="Аккаунты" />
       <p className="panel p-4 text-sm text-fg-muted">
-        Пароль Instagram не спрашивается и не хранится. «Добавить» создаёт карточку очереди. Чтобы реально постить —
-        на карточке жми <strong>Meta-токен</strong> (официальный Graph API). Удаление снимает аккаунт и его задачи.
+        Залил видео в «Загрузка» → назначил аккаунт → слот по AI-часам. Чтобы ролик ушёл в Instagram, на карточке
+        жми <strong>Подключить Instagram</strong> (окно Facebook «Разрешить»). Пароль не вводится.
       </p>
+      <div className="flex justify-end">
+        <Button
+          variant="secondary"
+          onClick={async () => {
+            const r = await tickScheduler();
+            toast.message(`Очередь: обработано ${r.processed}, опубликовано ${"published" in r ? r.published : 0}`);
+            await reload();
+          }}
+        >
+          Прогнать очередь сейчас
+        </Button>
+      </div>
       <form
         className="panel grid gap-3 p-4 md:grid-cols-[1fr_1fr_120px_auto]"
         onSubmit={async (e) => {
@@ -157,8 +176,18 @@ function AccountsPage() {
                 >
                   {a.status === "PAUSED" ? "Запустить" : "Пауза"}
                 </Button>
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    const r = await startMetaConnect({ data: { accountId: a.id } });
+                    if (!r.ok) toast.error(r.error);
+                    else window.location.assign(r.url);
+                  }}
+                >
+                  Подключить Instagram
+                </Button>
                 <Button size="sm" variant="secondary" onClick={() => setMetaFor(metaFor === a.id ? null : a.id)}>
-                  Meta-токен
+                  Вручную
                 </Button>
                 <Button
                   size="sm"

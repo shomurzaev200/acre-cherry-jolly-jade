@@ -36,6 +36,7 @@ services:
     volumes:
       - ./:/app
       - app_nm:/app/node_modules
+      - ./data/uploads:/app/data/uploads
     environment:
       DATABASE_URL: postgres://pulse:pulse@postgres:5432/pulse
       REDIS_URL: redis://redis:6379
@@ -61,6 +62,7 @@ services:
       - "80:80"
     volumes:
       - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./data/uploads:/var/www/media:ro
 
 volumes:
   pgdata:

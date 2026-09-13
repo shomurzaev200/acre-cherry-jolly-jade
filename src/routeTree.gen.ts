@@ -26,11 +26,14 @@ import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppUploadRouteImport } from './routes/_app/upload'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiMediaRouteImport } from './routes/api/media'
 import { Route as ApiMetricsRouteImport } from './routes/api/metrics'
 import { Route as ApiReadyRouteImport } from './routes/api/ready'
+import { Route as MediaNameRouteImport } from './routes/media.$name'
 import { Route as AppAccountsIdRouteImport } from './routes/_app/accounts.$id'
 import { Route as AppContentIdRouteImport } from './routes/_app/content.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiMetaCallbackRouteImport } from './routes/api/meta/callback'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -116,6 +119,11 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMediaRoute = ApiMediaRouteImport.update({
+  id: '/api/media',
+  path: '/api/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMetricsRoute = ApiMetricsRouteImport.update({
   id: '/api/metrics',
   path: '/api/metrics',
@@ -124,6 +132,11 @@ const ApiMetricsRoute = ApiMetricsRouteImport.update({
 const ApiReadyRoute = ApiReadyRouteImport.update({
   id: '/api/ready',
   path: '/api/ready',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MediaNameRoute = MediaNameRouteImport.update({
+  id: '/media/$name',
+  path: '/media/$name',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAccountsIdRoute = AppAccountsIdRouteImport.update({
@@ -139,6 +152,11 @@ const AppContentIdRoute = AppContentIdRouteImport.update({
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMetaCallbackRoute = ApiMetaCallbackRouteImport.update({
+  id: '/api/meta/callback',
+  path: '/api/meta/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -159,11 +177,14 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/upload': typeof AppUploadRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/media': typeof ApiMediaRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/api/ready': typeof ApiReadyRoute
+  '/media/$name': typeof MediaNameRoute
   '/accounts/$id': typeof AppAccountsIdRoute
   '/content/$id': typeof AppContentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/meta/callback': typeof ApiMetaCallbackRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -181,12 +202,15 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/upload': typeof AppUploadRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/media': typeof ApiMediaRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/api/ready': typeof ApiReadyRoute
+  '/media/$name': typeof MediaNameRoute
   '/': typeof AppIndexRoute
   '/accounts/$id': typeof AppAccountsIdRoute
   '/content/$id': typeof AppContentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/meta/callback': typeof ApiMetaCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,12 +230,15 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/upload': typeof AppUploadRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/media': typeof ApiMediaRoute
   '/api/metrics': typeof ApiMetricsRoute
   '/api/ready': typeof ApiReadyRoute
+  '/media/$name': typeof MediaNameRoute
   '/_app/': typeof AppIndexRoute
   '/_app/accounts/$id': typeof AppAccountsIdRoute
   '/_app/content/$id': typeof AppContentIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/meta/callback': typeof ApiMetaCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -232,11 +259,14 @@ export interface FileRouteTypes {
     | '/settings'
     | '/upload'
     | '/api/health'
+    | '/api/media'
     | '/api/metrics'
     | '/api/ready'
+    | '/media/$name'
     | '/accounts/$id'
     | '/content/$id'
     | '/api/auth/$'
+    | '/api/meta/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -254,12 +284,15 @@ export interface FileRouteTypes {
     | '/settings'
     | '/upload'
     | '/api/health'
+    | '/api/media'
     | '/api/metrics'
     | '/api/ready'
+    | '/media/$name'
     | '/'
     | '/accounts/$id'
     | '/content/$id'
     | '/api/auth/$'
+    | '/api/meta/callback'
   id:
     | '__root__'
     | '/_app'
@@ -278,21 +311,27 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/upload'
     | '/api/health'
+    | '/api/media'
     | '/api/metrics'
     | '/api/ready'
+    | '/media/$name'
     | '/_app/'
     | '/_app/accounts/$id'
     | '/_app/content/$id'
     | '/api/auth/$'
+    | '/api/meta/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  ApiMediaRoute: typeof ApiMediaRoute
   ApiMetricsRoute: typeof ApiMetricsRoute
   ApiReadyRoute: typeof ApiReadyRoute
+  MediaNameRoute: typeof MediaNameRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiMetaCallbackRoute: typeof ApiMetaCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -416,6 +455,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/media': {
+      id: '/api/media'
+      path: '/api/media'
+      fullPath: '/api/media'
+      preLoaderRoute: typeof ApiMediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/metrics': {
       id: '/api/metrics'
       path: '/api/metrics'
@@ -428,6 +474,13 @@ declare module '@tanstack/react-router' {
       path: '/api/ready'
       fullPath: '/api/ready'
       preLoaderRoute: typeof ApiReadyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/media/$name': {
+      id: '/media/$name'
+      path: '/media/$name'
+      fullPath: '/media/$name'
+      preLoaderRoute: typeof MediaNameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/accounts/$id': {
@@ -449,6 +502,13 @@ declare module '@tanstack/react-router' {
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/meta/callback': {
+      id: '/api/meta/callback'
+      path: '/api/meta/callback'
+      fullPath: '/api/meta/callback'
+      preLoaderRoute: typeof ApiMetaCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -518,9 +578,12 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   ApiHealthRoute: ApiHealthRoute,
+  ApiMediaRoute: ApiMediaRoute,
   ApiMetricsRoute: ApiMetricsRoute,
   ApiReadyRoute: ApiReadyRoute,
+  MediaNameRoute: MediaNameRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiMetaCallbackRoute: ApiMetaCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
