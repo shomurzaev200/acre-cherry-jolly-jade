@@ -36,11 +36,14 @@ services:
       REDIS_URL: redis://redis:6379
       HOST: 0.0.0.0
       PORT: "8080"
+      VITE_AUTH_ENABLED: "true"
+      BETTER_AUTH_SECRET: pulse-vps-dev-secret-change-me-please-32
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 15s
       timeout: 5s
-      retries: 10
+      retries: 20
+      start_period: 40s
 
   nginx:
     image: nginx:1.27-alpine
