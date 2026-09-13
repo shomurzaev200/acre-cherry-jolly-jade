@@ -103,27 +103,65 @@ const LOCAL_DEV_ORIGINS: string[] = [
   "http://127.0.0.1:8080",
   "http://[::1]:8080",
 ];
+
+function originsFromBase(url: string | undefined): string[] {
+  if (!url) return [];
+  const out = new Set<string>([url.replace(/\/+$/, "")]);
+  try {
+    const u = new URL(url);
+    const proto = u.protocol;
+    out.add(`${proto}//${u.hostname}`);
+    out.add(`${proto}//${u.hostname}:80`);
+    out.add(`${proto}//${u.hostname}:8080`);
+  } catch {
+    /* ignore malformed BETTER_AUTH_URL */
+  }
+  return [...out];
+}
+
+const envTrusted = (env("BETTER_AUTH_TRUSTED_ORIGINS") ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const staticTrustedOrigins: string[] = explicitBaseURL
+  ? [...originsFromBase(explicitBaseURL), ...LOCAL_DEV_ORIGINS, ...envTrusted]
+  : [
+      ...previewAllowedHosts,
+      ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
+      ...LOCAL_DEV_ORIGINS,
+      ...envTrusted,
+    ];
+
+/** Same-origin POSTs from the page itself (VPS IP / nginx :80) must be trusted. */
+function trustedOrigins(request?: Request): string[] {
+  const extra: string[] = [];
+  const origin = request?.headers.get("origin");
+  const hostRaw =
+    request?.headers.get("x-forwarded-host") ?? request?.headers.get("host") ?? "";
+  const hostName = hostRaw.split(",")[0]?.trim().split(":")[0] ?? "";
+  if (origin && hostName) {
+    try {
+      if (new URL(origin).hostname === hostName) extra.push(origin);
+    } catch {
+      /* ignore */
+    }
+  }
+  return [...staticTrustedOrigins, ...extra];
+}
+
+const httpVps =
+  env("PULSE_HTTP_COOKIES") === "true" ||
+  (Boolean(explicitBaseURL?.startsWith("http://")) &&
+    !/localhost|127\.0\.0\.1|\[::1\]/.test(explicitBaseURL ?? ""));
+
 const baseURL = explicitBaseURL ?? {
-  // Include loopback hosts so dynamic baseURL resolves for local email/password
-  // (not only the preview wildcard).
-  allowedHosts: [...previewAllowedHosts, "localhost", "127.0.0.1", "[::1]"],
-  // `auto` → trust both http:// and https:// expansions of allowedHosts
-  // (preview is https; local dev is http).
+  allowedHosts: httpVps
+    ? ["*"]
+    : [...previewAllowedHosts, "localhost", "127.0.0.1", "[::1]"],
   protocol: "auto" as const,
   fallback: "http://localhost:8080",
 };
-
-// Origins Better Auth accepts on credentialed POSTs (sign-up/sign-in, etc.).
-// Missing entries here surface as FORBIDDEN "Invalid origin".
-const trustedOrigins: string[] = explicitBaseURL
-  ? [explicitBaseURL, ...LOCAL_DEV_ORIGINS]
-  : [
-      // Host wildcards (matched against Origin's host)
-      ...previewAllowedHosts,
-      // Full-origin wildcards (matched against Origin)
-      ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
-      ...LOCAL_DEV_ORIGINS,
-    ];
 
 const databaseUrl = env("DATABASE_URL");
 
@@ -146,7 +184,9 @@ const database = databaseUrl
   : { dialect: pgliteDialect(() => getPglite()), type: "postgres" as const };
 
 /** Session token cookie name — also read by the live-preview popup completion page. */
-export const SESSION_TOKEN_COOKIE = "__Host-grok-auth.session_token";
+export const SESSION_TOKEN_COOKIE = httpVps
+  ? "pulse-auth.session_token"
+  : "__Host-grok-auth.session_token";
 
 // Built separately so the `betterAuth({...})` call stays easy to edit without
 // breaking brackets (models often trip on the conditional plugin spread).
@@ -222,13 +262,24 @@ export const auth = betterAuth({
   // `http://localhost`, so local dev still works.)
   advanced: {
     useSecureCookies: false,
-    defaultCookieAttributes: { secure: true, sameSite: "lax", path: "/" },
-    cookies: {
-      session_token: { name: SESSION_TOKEN_COOKIE },
-      session_data: { name: "__Host-grok-auth.session_data" },
-      account_data: { name: "__Host-grok-auth.account_data" },
-      dont_remember: { name: "__Host-grok-auth.dont_remember" },
+    defaultCookieAttributes: {
+      secure: httpVps ? false : true,
+      sameSite: "lax",
+      path: "/",
     },
+    cookies: httpVps
+      ? {
+          session_token: { name: "pulse-auth.session_token" },
+          session_data: { name: "pulse-auth.session_data" },
+          account_data: { name: "pulse-auth.account_data" },
+          dont_remember: { name: "pulse-auth.dont_remember" },
+        }
+      : {
+          session_token: { name: SESSION_TOKEN_COOKIE },
+          session_data: { name: "__Host-grok-auth.session_data" },
+          account_data: { name: "__Host-grok-auth.account_data" },
+          dont_remember: { name: "__Host-grok-auth.dont_remember" },
+        },
   },
 
   plugins: [
